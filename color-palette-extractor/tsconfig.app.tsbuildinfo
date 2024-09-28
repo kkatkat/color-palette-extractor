@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/dropzone.tsx","./src/components/home.tsx","./src/components/palettecard.tsx","./src/components/settingsform.tsx","./src/logic/functions.ts","./src/logic/kmeans.ts","./src/logic/types.ts","./src/logic/worker.ts"],"version":"5.6.2"}
