@@ -1,5 +1,5 @@
 import { euclideanDistance, randomInt } from "./functions";
-import { RGB } from "./types";
+import { RGB, WorkerMessage } from "./types";
 
 export default class KMeans {
     private maxIterations: number;
@@ -16,7 +16,7 @@ export default class KMeans {
         this.clusters = [];
     }
 
-    async fit(data: RGB[]): Promise<RGB[]> {
+    async fit(data: RGB[], progressCallback?: (progress: number) => void): Promise<RGB[]> {
         // Initialize centroids
         for (let i = 0; i < this.k; i++) {
             this.centroids[i] = data[randomInt(0, data.length - 1)];
@@ -58,6 +58,11 @@ export default class KMeans {
                 }
             }
 
+            // Report progress
+            if (progressCallback) {
+                progressCallback(converged ? 1 : (i + 1) / this.maxIterations);
+            }
+
             if (converged || i === this.maxIterations - 1) {
                 return this.centroids;
             }
@@ -67,16 +72,20 @@ export default class KMeans {
     }
 }
 
-export async function trainKMeans(data: RGB[], k?: number, maxIterations?: number, tolerance?: number): Promise<RGB[]> {
+export async function trainKMeans(data: RGB[], k?: number, maxIterations?: number, tolerance?: number, onProgress?: (progress: number) => void): Promise<RGB[]> {
     return new Promise((resolve, reject) => {
         const worker = new Worker(new URL('./worker.ts', import.meta.url), {
             type: 'module',
         });
         worker.postMessage({ data, k, maxIterations, tolerance });
 
-        worker.onmessage = (event) => {
-            resolve(event.data);
-            worker.terminate();
+        worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
+            if (event.data.type === 'progress' && onProgress) {
+                onProgress(event.data.payload);
+            } else if (event.data.type === 'result') {
+                resolve(event.data.payload);
+                worker.terminate();
+            }
         };
 
         worker.onerror = (error) => {

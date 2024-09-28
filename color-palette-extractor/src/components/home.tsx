@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Center, Container, Group, Image as MantineImage, Paper, Title, useMantineTheme } from "@mantine/core";
+import { ActionIcon, Center, Collapse, Container, Group, Image as MantineImage, Paper, Progress, Title, useMantineTheme } from "@mantine/core";
 import { FileWithPath } from "@mantine/dropzone";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DropzoneWrapper from "./dropzone";
@@ -18,6 +18,7 @@ export default function Home() {
     const [palette, setPalette] = useState<RGB[] | null>(null);
     const [loading, setLoading] = useState(false);
     const [infoModalOpen, setInfoModalOpen] = useState(false);
+    const [progress, setProgress] = useState(0);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -26,6 +27,7 @@ export default function Home() {
         setImageData(null);
         setPalette(null);
         setLoading(false);
+        setProgress(0);
     }
 
     const imagePreview = useMemo(() => {
@@ -50,16 +52,23 @@ export default function Home() {
                 <MantineImage radius='md' src={imageUrl} onLoad={() => URL.revokeObjectURL(imageUrl)} width='100%' />
             </Paper>
         )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [file, loading])
 
     const getColorPalette = async (settings: Partial<Settings>) => {
         setLoading(true);
+        setProgress(0);
 
         if (!imageData) {
             return;
         }
 
-        const centroids = await trainKMeans(imageData, settings.colorCount, settings.maxIterations, settings.tolerance);
+        const centroids = await trainKMeans(imageData, settings.colorCount, settings.maxIterations, settings.tolerance, (prg) => setProgress(prg * 100));
+
+        window.scrollTo({
+            top: document.getElementById('results-card')?.offsetTop,
+            behavior: 'smooth',
+        })
 
         setPalette(centroids);
         setLoading(false);
@@ -119,13 +128,16 @@ export default function Home() {
                                 {imagePreview}
                             </Center>
                             <SettingsForm onSubmit={(data) => getColorPalette(data)} loading={loading} />
+                            <Collapse in={!!progress} mt={theme.spacing.md}>
+                                <Progress size="xs" value={progress} />
+                            </Collapse>
                         </>
 
                     }
                 </Paper>
                 {
                     palette &&
-                    <PaletteCard palette={palette} />
+                    <PaletteCard palette={palette}/>
                 }
             <InfoModal open={infoModalOpen} onClose={() => setInfoModalOpen(false)}/>
             </Container>

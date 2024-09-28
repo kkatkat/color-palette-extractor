@@ -1,4 +1,12 @@
 import { RGB } from "./types";
+import colorNames from '../color_names.json'
+
+const COLORS = Object.entries(colorNames).map(([name, rgb]) => {
+    return {
+        name,
+        rgb: rgb as RGB
+    }
+});
 
 export function getPixels(array: Uint8ClampedArray): RGB[] {
     const pixels = [];
@@ -17,4 +25,17 @@ export function euclideanDistance(a: RGB, b: RGB) {
 
 export function randomInt(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+export function getClosestColorName(color: RGB): string {
+    const distances = COLORS.map((namedColor) => {
+        return {
+            name: namedColor.name,
+            distance: euclideanDistance(namedColor.rgb, color)
+        }
+    });
+
+    return distances.reduce((prev, current) => {
+        return prev.distance < current.distance ? prev : current;
+    }, distances[0]).name;
 }

@@ -5,3 +5,7 @@ export type Settings = {
     maxIterations: number;
     tolerance: number;
 }
+
+export type WorkerMessage = 
+    | { type: 'progress'; payload: number }
+    | { type: 'result'; payload: RGB[] };
