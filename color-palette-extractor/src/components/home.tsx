@@ -63,7 +63,7 @@ export default function Home() {
             return;
         }
 
-        const centroids = await trainKMeans(imageData, settings.colorCount, settings.maxIterations, settings.tolerance, (prg) => setProgress(prg * 100));
+        const centroids = await trainKMeans(imageData, settings.colorCount, settings.maxIterations, settings.tolerance, settings.sampleSize, (prg) => setProgress(prg * 100));
 
         window.scrollTo({
             top: document.getElementById('results-card')?.offsetTop,
@@ -111,7 +111,7 @@ export default function Home() {
                         <ActionIcon variant="light" size='lg' onClick={() => setInfoModalOpen(true)}>
                             <IconInfoCircle />
                         </ActionIcon>
-                        <ActionIcon variant="light" size='lg'>
+                        <ActionIcon variant="light" size='lg' component='a' href="https://github.com/kkatkat/color-palette-extractor" target="_blank">
                             <IconBrandGithub />
                         </ActionIcon>
                     </Group>

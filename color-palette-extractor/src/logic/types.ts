@@ -4,6 +4,7 @@ export type Settings = {
     colorCount: number;
     maxIterations: number;
     tolerance: number;
+    sampleSize: number;
 }
 
 export type WorkerMessage = 

@@ -9,13 +9,19 @@ type SettingsFormProps = {
 }
 
 export default function SettingsForm({ onSubmit, loading }: SettingsFormProps) {
-    const [colorCount, setColorCount] = useState<number>(5);
-    const [maxIterations, setMaxIterations] = useState<number>(100);
-    const [settingsOpen, setSettingsOpen] = useState(false);
     const theme = useMantineTheme();
 
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [colorCount, setColorCount] = useState<number>(5);
+    const [maxIterations, setMaxIterations] = useState<number>(100);
+    const [sampleSize, setSampleSize] = useState<number>(1.00);
+
     const validate = () => {
-        return [colorCount > 0, maxIterations > 0].every(Boolean);
+        return [
+            colorCount > 0, 
+            maxIterations > 0, 
+            (sampleSize > 0 && sampleSize <= 100),
+        ].every(Boolean);
     }
 
     const handleSubmit = () => {
@@ -26,6 +32,7 @@ export default function SettingsForm({ onSubmit, loading }: SettingsFormProps) {
         onSubmit({
             colorCount,
             maxIterations,
+            sampleSize
         })
     }
 
@@ -62,6 +69,7 @@ export default function SettingsForm({ onSubmit, loading }: SettingsFormProps) {
                     onClick={handleSubmit}
                     loading={loading}
                     disabled={!colorCount}
+                    className='btn-generate'
                 >
                     Generate
                 </Button>
@@ -85,7 +93,22 @@ export default function SettingsForm({ onSubmit, loading }: SettingsFormProps) {
                             max={10000}
                         />
                     </Grid.Col>
-
+                    <Grid.Col span={6}>
+                        <NumberInput
+                            label="Sample size"
+                            size="sm"
+                            value={sampleSize}
+                            onChange={(value) => setSampleSize(+value)}
+                            allowDecimal={true}
+                            fixedDecimalScale
+                            allowNegative={false}
+                            decimalScale={2}
+                            clampBehavior="strict"
+                            min={0.01}
+                            max={1}
+                            step={0.01}
+                        />
+                    </Grid.Col>
                 </Grid>
 
             </Collapse>

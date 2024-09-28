@@ -1,0 +1,12 @@
+.btn-generate {
+    @media (max-width: $mantine-breakpoint-sm) {
+        width: 100%;
+    }
+}
+
+.color-preview {
+    @media (max-width: $mantine-breakpoint-sm) {
+        height: 100px !important;
+        width: 100px !important;
+    }
+}

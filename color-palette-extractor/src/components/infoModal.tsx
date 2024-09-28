@@ -18,7 +18,7 @@ export default function InfoModal({ onClose, open }: InfoModalProps) {
                     The algorithm groups similar colors together and returns the most representative colors in the image. You can select the amount of colors you want to be generated, as well as several other geeky options.
                 </Text>
                 <Text variant="p">
-                    Because the algorithm starts with random colors as centroids, the result might vary slightly each time you run it. This is normal and expected.
+                    Because the algorithm starts with random colors as centroids, the result might vary slightly each time you run it. This is normal and expected. You might also notice that certain images take longer to process than others, despite you specifying the same settings.
                 </Text>
                 <Text variant="p">
                     The processing is done on your machine - no requests are made to remote servers, so feel free to experiment with the settings, but keep in mind it might become slow for large images or high settings!

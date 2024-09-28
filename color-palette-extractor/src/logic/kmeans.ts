@@ -5,18 +5,22 @@ export default class KMeans {
     private maxIterations: number;
     private k: number;
     private tolerance: number;
+    private sampleSize: number;
     private centroids: RGB[];
     private clusters: RGB[][];
     
-    constructor(k: number = 5, maxIterations: number = 100, tolerance: number = 0.001) {
+    constructor(k: number = 5, maxIterations: number = 100, tolerance: number = 0.001, sampleSize: number = 1) {
         this.k = k;
         this.maxIterations = maxIterations;
         this.tolerance = tolerance;
+        this.sampleSize = sampleSize;
         this.centroids = [];
         this.clusters = [];
     }
 
     async fit(data: RGB[], progressCallback?: (progress: number) => void): Promise<RGB[]> {
+        data = await this.resample(data);
+
         // Initialize centroids
         for (let i = 0; i < this.k; i++) {
             this.centroids[i] = data[randomInt(0, data.length - 1)];
@@ -69,15 +73,35 @@ export default class KMeans {
         }
 
         return this.centroids;
+    };
+
+    private async resample(data: RGB[]) {
+        console.log('Amount of pixels before resampling:', data.length);
+
+        if (this.sampleSize === 1) {
+            return data;
+        }
+
+        const sampleAmount = Math.floor(this.sampleSize * data.length);
+
+        const sample = [];
+
+        for (let i = 0; i < sampleAmount; i++) {
+            sample.push(data[randomInt(0, data.length - 1)]);
+        }
+
+        console.log('Amount of pixels after resampling:', sample.length);
+
+        return sample;
     }
 }
 
-export async function trainKMeans(data: RGB[], k?: number, maxIterations?: number, tolerance?: number, onProgress?: (progress: number) => void): Promise<RGB[]> {
+export async function trainKMeans(data: RGB[], colorCount?: number, maxIterations?: number, tolerance?: number, sampleSize?: number, onProgress?: (progress: number) => void): Promise<RGB[]> {
     return new Promise((resolve, reject) => {
         const worker = new Worker(new URL('./worker.ts', import.meta.url), {
             type: 'module',
         });
-        worker.postMessage({ data, k, maxIterations, tolerance });
+        worker.postMessage({ data, colorCount, maxIterations, tolerance, sampleSize });
 
         worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
             if (event.data.type === 'progress' && onProgress) {
