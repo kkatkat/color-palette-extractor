@@ -27,6 +27,7 @@ export default class KMeans {
         }
 
         for (let i = 0; i < this.maxIterations; i++) {
+            console.log('Iteration:', i + 1);
 
             for (let j = 0; j < this.k; j++) {
                 this.clusters[j] = [];
@@ -57,7 +58,11 @@ export default class KMeans {
             // Early stopping
             let converged = true;
             for (let i = 0; i < this.k; i++) {
-                if (euclideanDistance(oldCentroids[i], this.centroids[i]) > this.tolerance) {
+                const dist = euclideanDistance(oldCentroids[i], this.centroids[i]);
+                
+                console.log(dist)
+
+                if (dist > this.tolerance) {
                     converged = false;
                 }
             }

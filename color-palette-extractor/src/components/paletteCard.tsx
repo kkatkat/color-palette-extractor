@@ -1,30 +1,13 @@
 import { ActionIcon, Anchor, Center, Group, Loader, Modal, Paper, rem, Stack, Text, Title, Tooltip, useMantineTheme } from "@mantine/core";
 import { RGB } from "../logic/types";
-import { useMemo, useState } from "react";
-import { getClosestColorName } from "../logic/functions";
+import { useState } from "react";
 import { IconQuestionMark } from "@tabler/icons-react";
 import ColorInfo from "./colorInfo";
 
-export default function PaletteCard({ palette }: { palette: RGB[] }) {
+export default function PaletteCard({ palette, colorNames, loading }: { palette: RGB[], colorNames: Map<RGB, string>, loading: boolean }) {
     const theme = useMantineTheme();
 
-    const [loading, setLoading] = useState(true);
     const [aboutOpen, setAboutOpen] = useState(false);
-
-    const colorNames = useMemo(() => {
-        setLoading(true);
-
-        const colorNamesMap: Map<RGB, string> = new Map();
-
-        for (const color of palette) {
-            const closestColor = getClosestColorName(color);
-            colorNamesMap.set(color, closestColor);
-        }
-
-        setLoading(false);
-
-        return colorNamesMap;
-    }, [palette])
 
     if (loading) {
         return (

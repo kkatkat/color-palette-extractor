@@ -1,4 +1,4 @@
-import { Button, Collapse, Divider, Grid, Group, NumberInput, Stack, Text, useMantineTheme } from "@mantine/core";
+import { Button, Collapse, Divider, Flex, Grid, Group, NumberInput, Stack, Text, useMantineTheme } from "@mantine/core";
 import { useState } from "react";
 import { IconWand, IconSettings } from "@tabler/icons-react";
 import { Settings } from "../logic/types";
@@ -17,12 +17,14 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
     const [colorCount, setColorCount] = useState<number>(5);
     const [maxIterations, setMaxIterations] = useState<number>(100);
     const [sampleSize, setSampleSize] = useState<number>(1.00);
+    const [tolerance, setTolerance] = useState<number>(0.001);
 
     const validate = () => {
         return [
             colorCount > 0,
             maxIterations > 0,
             (sampleSize > 0 && sampleSize <= 100),
+            tolerance >= 0,
             downscaleFactor > 0
         ].every(Boolean);
     }
@@ -35,8 +37,17 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
         onSubmit({
             colorCount,
             maxIterations,
-            sampleSize
+            sampleSize,
+            tolerance,
         })
+    }
+
+    const resetToDefault = () => {
+        setColorCount(5);
+        setMaxIterations(100);
+        setSampleSize(1.00);
+        setTolerance(0.001);
+        onDownscaleFactorChange(10);
     }
 
     return (
@@ -79,7 +90,12 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
             </Group>
             <Collapse in={settingsOpen}>
                 <Divider />
-                <Text fw={500} my={theme.spacing.xs}>Advanced settings</Text>
+                <Flex justify='space-between' align='center'>
+                    <Text fw={500} my={theme.spacing.xs}>Advanced settings</Text>
+                    <Button variant='subtle' size='compact-xs' disabled={loading} onClick={resetToDefault}>
+                        Reset to default
+                    </Button>
+                </Flex>
                 <Grid>
                     <Grid.Col span={6}>
                         <NumberInput
@@ -94,6 +110,22 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             clampBehavior="strict"
                             min={1}
                             max={10000}
+                        />
+                    </Grid.Col>
+                    <Grid.Col span={6}>
+                        <NumberInput
+                            label="Tolerance"
+                            size="sm"
+                            value={tolerance}
+                            onChange={(value) => setTolerance(+value)}
+                            allowDecimal={true}
+                            fixedDecimalScale
+                            allowNegative={false}
+                            decimalScale={3}
+                            clampBehavior="strict"
+                            min={0}
+                            max={100}
+                            step={0.001}
                         />
                     </Grid.Col>
                     <Grid.Col span={6}>

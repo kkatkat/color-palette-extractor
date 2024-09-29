@@ -2,7 +2,7 @@ import { ActionIcon, Center, Collapse, Container, Group, Image as MantineImage, 
 import { FileWithPath } from "@mantine/dropzone";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DropzoneWrapper from "./dropzone";
-import { getPixels } from "../logic/functions";
+import { getClosestColorName, getPixels } from "../logic/functions";
 import { RGB, Settings } from "../logic/types";
 import SettingsForm from "./settingsForm";
 import { trainKMeans } from "../logic/kmeans";
@@ -31,6 +31,19 @@ export default function Home() {
         setLoading(false);
         setProgress(0);
     }
+
+    const colorNames = useMemo(() => {
+        if (!palette) return new Map();
+
+        const colorNamesMap: Map<RGB, string> = new Map();
+
+        for (const color of palette) {
+            const closestColor = getClosestColorName(color);
+            colorNamesMap.set(color, closestColor);
+        }
+
+        return colorNamesMap;
+    }, [palette])
 
     const imagePreview = useMemo(() => {
         if (!file) return null;
@@ -105,7 +118,7 @@ export default function Home() {
     return (
         <>
             <Container size='sm' pt={theme.spacing.lg}>
-                <Group justify="space-between" align="center" mb={theme.spacing.md}>
+                <Group justify="space-between" align="center" mb={theme.spacing.md} wrap="nowrap">
                     <Title order={3} c={theme.primaryColor}>Color Palette Extractor</Title>
                     <Group gap={theme.spacing.xs}>
                         <ActionIcon variant="light" size='lg' onClick={() => setInfoModalOpen(true)}>
@@ -128,7 +141,11 @@ export default function Home() {
                                 {imagePreview}
                             </Center>
                             <Collapse in={!!palette}>
-                                <PalettePreviewRail palette={palette}/>
+                            {
+                                !!palette &&
+                                <PalettePreviewRail palette={palette} colorNames={colorNames}/>
+
+                            }
                             </Collapse>
                             <SettingsForm onSubmit={(data) => getColorPalette(data)} loading={loading} downscaleFactor={downscaleFactor} onDownscaleFactorChange={(value) => setDownscaleFactor(value)} />
                             <Collapse in={!!progress && progress < 100} mt={theme.spacing.md}>
@@ -140,7 +157,7 @@ export default function Home() {
                 </Paper>
                 {
                     palette &&
-                    <PaletteCard palette={palette}/>
+                    <PaletteCard palette={palette} colorNames={colorNames} loading={loading}/>
                 }
             <InfoModal open={infoModalOpen} onClose={() => setInfoModalOpen(false)}/>
             </Container>
