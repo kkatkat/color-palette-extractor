@@ -5,10 +5,12 @@ import { Settings } from "../logic/types";
 
 type SettingsFormProps = {
     onSubmit: (data: Partial<Settings>) => void;
+    downscaleFactor: number;
+    onDownscaleFactorChange: (value: number) => void;
     loading?: boolean;
 }
 
-export default function SettingsForm({ onSubmit, loading }: SettingsFormProps) {
+export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDownscaleFactorChange }: SettingsFormProps) {
     const theme = useMantineTheme();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -18,9 +20,10 @@ export default function SettingsForm({ onSubmit, loading }: SettingsFormProps) {
 
     const validate = () => {
         return [
-            colorCount > 0, 
-            maxIterations > 0, 
+            colorCount > 0,
+            maxIterations > 0,
             (sampleSize > 0 && sampleSize <= 100),
+            downscaleFactor > 0
         ].every(Boolean);
     }
 
@@ -41,7 +44,7 @@ export default function SettingsForm({ onSubmit, loading }: SettingsFormProps) {
             <Group justify='space-between' mt={theme.spacing.md}>
                 <NumberInput
                     size="xl"
-                    placeholder="Amount of colors"
+                    placeholder="Number of colors"
                     value={colorCount}
                     onChange={(value) => setColorCount(+value)}
                     min={1}
@@ -109,8 +112,22 @@ export default function SettingsForm({ onSubmit, loading }: SettingsFormProps) {
                             step={0.01}
                         />
                     </Grid.Col>
+                    <Grid.Col span={6}>
+                        <NumberInput
+                            label="Downscale factor"
+                            size="sm"
+                            value={downscaleFactor}
+                            onChange={(value) => onDownscaleFactorChange(+value)}
+                            allowDecimal={false}
+                            allowLeadingZeros={false}
+                            allowNegative={false}
+                            suffix="x"
+                            clampBehavior="strict"
+                            min={1}
+                            max={100}
+                        />
+                    </Grid.Col>
                 </Grid>
-
             </Collapse>
         </Stack>
     )

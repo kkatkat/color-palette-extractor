@@ -9,23 +9,25 @@ import { trainKMeans } from "../logic/kmeans";
 import PaletteCard from "./paletteCard";
 import { IconBrandGithub, IconInfoCircle, IconX } from "@tabler/icons-react";
 import InfoModal from "./infoModal";
+import PalettePreviewRail from "./palettePreviewRail";
 
 export default function Home() {
     const theme = useMantineTheme();
 
     const [file, setFile] = useState<FileWithPath | null>(null);
     const [imageData, setImageData] = useState<RGB[] | null>(null);
-    const [palette, setPalette] = useState<RGB[] | null>(null);
+    const [palette, setPalette] = useState<RGB[]>();
     const [loading, setLoading] = useState(false);
     const [infoModalOpen, setInfoModalOpen] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [downscaleFactor, setDownscaleFactor] = useState(10);
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const resetState = () => {
         setFile(null);
         setImageData(null);
-        setPalette(null);
+        setPalette(undefined);
         setLoading(false);
         setProgress(0);
     }
@@ -65,11 +67,6 @@ export default function Home() {
 
         const centroids = await trainKMeans(imageData, settings.colorCount, settings.maxIterations, settings.tolerance, settings.sampleSize, (prg) => setProgress(prg * 100));
 
-        window.scrollTo({
-            top: document.getElementById('results-card')?.offsetTop,
-            behavior: 'smooth',
-        })
-
         setPalette(centroids);
         setLoading(false);
     }
@@ -90,17 +87,20 @@ export default function Home() {
 
         image.src = URL.createObjectURL(file);
         image.onload = () => {
-            canvas.width = image.width;
-            canvas.height = image.height;
-            ctx?.drawImage(image, 0, 0, image.width, image.height);
+            const adjustedWidth = Math.floor(image.width / downscaleFactor);
+            const adjustedHeight = Math.floor(image.height / downscaleFactor);
+
+            canvas.width = adjustedWidth
+            canvas.height = adjustedHeight
+            ctx?.drawImage(image, 0, 0, adjustedWidth, adjustedHeight);
 
             if (ctx) {
-                const clampedArray = ctx.getImageData(0, 0, image.width, image.height, { colorSpace: 'srgb' }).data
+                const clampedArray = ctx.getImageData(0, 0, adjustedWidth, adjustedHeight, { colorSpace: 'srgb' }).data
 
                 setImageData(getPixels(clampedArray));
             }
         }
-    }, [file])
+    }, [file, downscaleFactor])
 
     return (
         <>
@@ -127,8 +127,11 @@ export default function Home() {
                             <Center>
                                 {imagePreview}
                             </Center>
-                            <SettingsForm onSubmit={(data) => getColorPalette(data)} loading={loading} />
-                            <Collapse in={!!progress} mt={theme.spacing.md}>
+                            <Collapse in={!!palette}>
+                                <PalettePreviewRail palette={palette}/>
+                            </Collapse>
+                            <SettingsForm onSubmit={(data) => getColorPalette(data)} loading={loading} downscaleFactor={downscaleFactor} onDownscaleFactorChange={(value) => setDownscaleFactor(value)} />
+                            <Collapse in={!!progress && progress < 100} mt={theme.spacing.md}>
                                 <Progress size="xs" value={progress} />
                             </Collapse>
                         </>

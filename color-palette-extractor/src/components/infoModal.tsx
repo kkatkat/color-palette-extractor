@@ -15,7 +15,7 @@ export default function InfoModal({ onClose, open }: InfoModalProps) {
                     This simple web app allows you to extract a color palette from an image using the <Anchor href="https://en.wikipedia.org/wiki/K-means_clustering" target="_blank"> K-means clustering</Anchor> algorithm.
                 </Text>
                 <Text variant="p">
-                    The algorithm groups similar colors together and returns the most representative colors in the image. You can select the amount of colors you want to be generated, as well as several other geeky options.
+                    The algorithm groups similar colors together and returns the most representative colors in the image. You can select the number of colors you want to be generated, as well as several other geeky options.
                 </Text>
                 <Text variant="p">
                     Because the algorithm starts with random colors as centroids, the result might vary slightly each time you run it. This is normal and expected. You might also notice that certain images take longer to process than others, despite you specifying the same settings.

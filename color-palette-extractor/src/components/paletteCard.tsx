@@ -54,6 +54,7 @@ export default function PaletteCard({ palette }: { palette: RGB[] }) {
                         return (
                             <Group key={index} gap='md' align="normal" wrap='nowrap'>
                                 <Paper
+                                    id={`color-${index}`}
                                     style={{
                                         backgroundColor: `rgb(${colorRgb})`,
                                         height: rem(160),

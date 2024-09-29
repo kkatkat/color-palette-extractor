@@ -76,7 +76,7 @@ export default class KMeans {
     };
 
     private async resample(data: RGB[]) {
-        console.log('Amount of pixels before resampling:', data.length);
+        console.log('Number of pixels:', data.length);
 
         if (this.sampleSize === 1) {
             return data;
@@ -90,7 +90,7 @@ export default class KMeans {
             sample.push(data[randomInt(0, data.length - 1)]);
         }
 
-        console.log('Amount of pixels after resampling:', sample.length);
+        console.log('Number of pixels after resampling:', sample.length);
 
         return sample;
     }
