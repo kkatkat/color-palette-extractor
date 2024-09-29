@@ -2,6 +2,8 @@
 
 A simple web app that allows you to generate a color palette from any image, using the K-Means clustering algorithm. It runs 100% locally and allows you to change the parameters of the algorithm to your liking.
 
+Built with React and Mantine.
+
 ### How to run it
 
 1. Clone the repo

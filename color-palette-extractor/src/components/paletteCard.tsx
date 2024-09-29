@@ -43,6 +43,7 @@ export default function PaletteCard({ palette, colorNames, loading }: { palette:
                                         height: rem(160),
                                         width: rem(160),
                                         cursor: 'pointer',
+                                        transition: 'transform 0.3s',
                                     }}
                                     withBorder
                                     className="color-preview"
