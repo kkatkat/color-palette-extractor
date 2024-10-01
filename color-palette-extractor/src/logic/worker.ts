@@ -1,14 +1,20 @@
 import KMeans from "./kmeans";
-import { RGB, Settings } from "./types";
+import { Result, RGB, Settings } from "./types";
 
 self.onmessage = async (event: MessageEvent<Settings & { data: RGB[] }>) => {
-    const { data, colorCount, maxIterations, tolerance, sampleSize } = event.data;
+    const { data, colorCount, maxIterations, tolerance, sampleSize, benchmarkMode } = event.data;
 
-    const kmeans = new KMeans(colorCount, maxIterations, tolerance, sampleSize);
+    const kmeans = new KMeans(colorCount, maxIterations, tolerance, sampleSize, benchmarkMode);
+
+    const start = performance.now();
 
     const centroids = await kmeans.fit(data, (progress) => {
         self.postMessage({ type: 'progress', payload: progress });
     });
 
-    self.postMessage({ type: 'result', payload: centroids });
+    const end = performance.now();
+
+    const benchmarkScore = benchmarkMode ? end - start : undefined;
+
+    self.postMessage({ type: 'result', payload: {palette: centroids, benchmarkScore } as Result });
 };

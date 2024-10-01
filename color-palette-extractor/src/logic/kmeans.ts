@@ -1,5 +1,13 @@
 import { euclideanDistance, randomInt } from "./functions";
-import { RGB, WorkerMessage } from "./types";
+import { Result, RGB, WorkerMessage } from "./types";
+
+const BENCHMARK_CENTROIDS: RGB[] = [
+    [255, 255, 255],
+    [0, 0, 0],
+    [255, 0, 0],
+    [0, 255, 0],
+    [0, 0, 255],
+];
 
 export default class KMeans {
     private maxIterations: number;
@@ -9,21 +17,23 @@ export default class KMeans {
     private centroids: RGB[];
     private clusters: RGB[][];
     
-    constructor(k: number = 5, maxIterations: number = 100, tolerance: number = 0.001, sampleSize: number = 1) {
+    constructor(k: number = 5, maxIterations: number = 100, tolerance: number = 0.001, sampleSize: number = 1, benchmarkMode: boolean = false) {
         this.k = k;
         this.maxIterations = maxIterations;
         this.tolerance = tolerance;
         this.sampleSize = sampleSize;
-        this.centroids = [];
+        this.centroids = benchmarkMode ? BENCHMARK_CENTROIDS : [];
         this.clusters = [];
     }
 
     async fit(data: RGB[], progressCallback?: (progress: number) => void): Promise<RGB[]> {
         data = await this.resample(data);
 
-        // Initialize centroids
-        for (let i = 0; i < this.k; i++) {
-            this.centroids[i] = data[randomInt(0, data.length - 1)];
+        // Initialize centroids if not provided (by benchmark mode = true)
+        if (!this.centroids.length) {
+            for (let i = 0; i < this.k; i++) {
+                this.centroids[i] = data[randomInt(0, data.length - 1)];
+            }
         }
 
         for (let i = 0; i < this.maxIterations; i++) {
@@ -101,12 +111,12 @@ export default class KMeans {
     }
 }
 
-export async function trainKMeans(data: RGB[], colorCount?: number, maxIterations?: number, tolerance?: number, sampleSize?: number, onProgress?: (progress: number) => void): Promise<RGB[]> {
+export async function trainKMeans(data: RGB[], colorCount?: number, maxIterations?: number, tolerance?: number, sampleSize?: number, benchmarkMode?: boolean, onProgress?: (progress: number) => void): Promise<Result> {
     return new Promise((resolve, reject) => {
         const worker = new Worker(new URL('./worker.ts', import.meta.url), {
             type: 'module',
         });
-        worker.postMessage({ data, colorCount, maxIterations, tolerance, sampleSize });
+        worker.postMessage({ data, colorCount, maxIterations, tolerance, sampleSize, benchmarkMode });
 
         worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
             if (event.data.type === 'progress' && onProgress) {
