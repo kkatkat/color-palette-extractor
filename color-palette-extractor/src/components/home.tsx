@@ -116,6 +116,8 @@ export default function Home() {
             return;
         }
 
+        setLoading(true);
+
         const ctx = canvas.getContext('2d');
         const image = new Image();
 
@@ -133,6 +135,8 @@ export default function Home() {
 
                 setImageData(getPixels(clampedArray));
             }
+
+            setLoading(false);
         }
     }, [file, downscaleFactor, benchmarkMode])
 
