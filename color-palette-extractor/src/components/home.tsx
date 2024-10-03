@@ -10,6 +10,8 @@ import PaletteCard from "./paletteCard";
 import { IconBrandGithub, IconInfoCircle, IconX } from "@tabler/icons-react";
 import InfoModal from "./infoModal";
 import PalettePreviewRail from "./palettePreviewRail";
+import benchmarkImage from '../assets/benchmark.jpg';
+import { modals } from "@mantine/modals";
 
 export default function Home() {
     const theme = useMantineTheme();
@@ -21,6 +23,9 @@ export default function Home() {
     const [infoModalOpen, setInfoModalOpen] = useState(false);
     const [progress, setProgress] = useState(0);
     const [downscaleFactor, setDownscaleFactor] = useState(10);
+    const [benchmarkMode, setBenchmarkMode] = useState(false);
+
+    const [imagePreview, setImagePreview] = useState<React.ReactNode>();
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -45,12 +50,16 @@ export default function Home() {
         return colorNamesMap;
     }, [palette])
 
-    const imagePreview = useMemo(() => {
+    const getImagePreview = () => {
         if (!file) return null;
 
-        const imageUrl = URL.createObjectURL(file);
+        let imageUrl = URL.createObjectURL(file);
 
-        return (
+        if (benchmarkMode) {
+            imageUrl = benchmarkImage;
+        }
+
+        setImagePreview(
             <Paper style={{ position: 'relative', width: '100%' }} withBorder shadow="md">
                 <ActionIcon
                     style={{
@@ -67,8 +76,12 @@ export default function Home() {
                 <MantineImage radius='md' src={imageUrl} onLoad={() => URL.revokeObjectURL(imageUrl)} width='100%' />
             </Paper>
         )
+    }
+
+    useEffect(() => {
+        getImagePreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [file, loading])
+    }, [file, loading, benchmarkMode])
 
     const getColorPalette = async (settings: Partial<Settings>) => {
         setLoading(true);
@@ -78,10 +91,18 @@ export default function Home() {
             return;
         }
 
-        const centroids = await trainKMeans(imageData, settings.colorCount, settings.maxIterations, settings.tolerance, settings.sampleSize, (prg) => setProgress(prg * 100));
+        const result = await trainKMeans(imageData, settings.colorCount, settings.maxIterations, settings.tolerance, settings.sampleSize, settings.benchmarkMode, (prg) => setProgress(prg * 100));
 
-        setPalette(centroids);
+        setPalette(result.palette);
         setLoading(false);
+
+        if (result.benchmarkScore) {
+            modals.open({
+                title: <Title order={5}>Benchmark results</Title>,
+                children: `Benchmark score: ${result.benchmarkScore}ms`,
+                centered: true,
+            })
+        }
     }
 
     useEffect(() => {
@@ -98,7 +119,7 @@ export default function Home() {
         const ctx = canvas.getContext('2d');
         const image = new Image();
 
-        image.src = URL.createObjectURL(file);
+        image.src = benchmarkMode ? benchmarkImage : URL.createObjectURL(file);
         image.onload = () => {
             const adjustedWidth = Math.floor(image.width / downscaleFactor);
             const adjustedHeight = Math.floor(image.height / downscaleFactor);
@@ -113,7 +134,14 @@ export default function Home() {
                 setImageData(getPixels(clampedArray));
             }
         }
-    }, [file, downscaleFactor])
+    }, [file, downscaleFactor, benchmarkMode])
+
+    useEffect(() => {
+        if (palette?.length) {
+            setPalette(undefined);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [benchmarkMode])
 
     return (
         <>
@@ -132,7 +160,10 @@ export default function Home() {
                 <Paper p={theme.spacing.md} shadow="xs" withBorder mb={theme.spacing.lg}>
                     {
                         !file &&
-                        <DropzoneWrapper onDrop={(files) => setFile(files[0])} />
+                        <DropzoneWrapper onDrop={(files) => {
+                            setFile(files[0]);
+                            setBenchmarkMode(false);
+                        }} />
                     }
                     {
                         file &&
@@ -141,13 +172,20 @@ export default function Home() {
                                 {imagePreview}
                             </Center>
                             <Collapse in={!!palette}>
-                            {
-                                !!palette &&
-                                <PalettePreviewRail palette={palette} colorNames={colorNames}/>
+                                {
+                                    !!palette &&
+                                    <PalettePreviewRail palette={palette} colorNames={colorNames} />
 
-                            }
+                                }
                             </Collapse>
-                            <SettingsForm onSubmit={(data) => getColorPalette(data)} loading={loading} downscaleFactor={downscaleFactor} onDownscaleFactorChange={(value) => setDownscaleFactor(value)} />
+                            <SettingsForm
+                                onSubmit={(data) => getColorPalette(data)}
+                                loading={loading}
+                                downscaleFactor={downscaleFactor}
+                                onDownscaleFactorChange={(value) => setDownscaleFactor(value)}
+                                benchmarkMode={benchmarkMode}
+                                onBenchmarkModeChange={(enabled) => setBenchmarkMode(enabled)}
+                            />
                             <Collapse in={!!progress && progress < 100} mt={theme.spacing.md}>
                                 <Progress size="xs" value={progress} />
                             </Collapse>
@@ -157,9 +195,9 @@ export default function Home() {
                 </Paper>
                 {
                     palette &&
-                    <PaletteCard palette={palette} colorNames={colorNames} loading={loading}/>
+                    <PaletteCard palette={palette} colorNames={colorNames} loading={loading} />
                 }
-            <InfoModal open={infoModalOpen} onClose={() => setInfoModalOpen(false)}/>
+                <InfoModal open={infoModalOpen} onClose={() => setInfoModalOpen(false)} />
             </Container>
             <canvas ref={canvasRef} style={{ display: 'none' }} />
         </>

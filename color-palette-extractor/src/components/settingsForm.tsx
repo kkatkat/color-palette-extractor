@@ -1,16 +1,27 @@
-import { Button, Collapse, Divider, Flex, Grid, Group, NumberInput, Stack, Text, useMantineTheme } from "@mantine/core";
-import { useState } from "react";
+import { Button, Collapse, Divider, Flex, Grid, Group, NumberInput, Stack, Switch, Text, useMantineTheme } from "@mantine/core";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconWand, IconSettings } from "@tabler/icons-react";
 import { Settings } from "../logic/types";
+import { modals } from "@mantine/modals";
+
+const BENCHMARK_SETTINGS: Omit<Settings & { downscaleFactor: number }, 'benchmarkMode'> = {
+    colorCount: 5,
+    maxIterations: 40,
+    sampleSize: 1.00,
+    tolerance: 0,
+    downscaleFactor: 1,
+}
 
 type SettingsFormProps = {
     onSubmit: (data: Partial<Settings>) => void;
     downscaleFactor: number;
     onDownscaleFactorChange: (value: number) => void;
+    benchmarkMode: boolean;
+    onBenchmarkModeChange: (enabled: boolean) => void;
     loading?: boolean;
 }
 
-export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDownscaleFactorChange }: SettingsFormProps) {
+export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDownscaleFactorChange, benchmarkMode, onBenchmarkModeChange }: SettingsFormProps) {
     const theme = useMantineTheme();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -19,7 +30,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
     const [sampleSize, setSampleSize] = useState<number>(1.00);
     const [tolerance, setTolerance] = useState<number>(0.001);
 
-    const validate = () => {
+    const validate = useCallback(() => {
         return [
             colorCount > 0,
             maxIterations > 0,
@@ -27,7 +38,9 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
             tolerance >= 0,
             downscaleFactor > 0
         ].every(Boolean);
-    }
+    }, [colorCount, maxIterations, sampleSize, tolerance, downscaleFactor]);
+
+    const settingsValid = useMemo(() => validate(), [validate]);
 
     const handleSubmit = () => {
         if (!validate()) {
@@ -39,16 +52,32 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
             maxIterations,
             sampleSize,
             tolerance,
+            benchmarkMode
         })
     }
 
     const resetToDefault = () => {
+        onBenchmarkModeChange(false);
         setColorCount(5);
         setMaxIterations(100);
         setSampleSize(1.00);
         setTolerance(0.001);
         onDownscaleFactorChange(10);
     }
+
+    useEffect(() => {
+        if (benchmarkMode) {
+            setColorCount(BENCHMARK_SETTINGS.colorCount);
+            setMaxIterations(BENCHMARK_SETTINGS.maxIterations);
+            setSampleSize(BENCHMARK_SETTINGS.sampleSize);
+            setTolerance(BENCHMARK_SETTINGS.tolerance);
+            onDownscaleFactorChange(BENCHMARK_SETTINGS.downscaleFactor);
+        } else {
+            resetToDefault();
+        }
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [benchmarkMode])
 
     return (
         <Stack>
@@ -67,6 +96,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     decimalScale={0}
                     suffix={` color${colorCount === 1 ? '' : 's'}`}
                     clampBehavior="strict"
+                    disabled={benchmarkMode}
                 />
                 <Button
                     variant={settingsOpen ? 'filled' : 'light'}
@@ -82,7 +112,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     leftSection={<IconWand />}
                     onClick={handleSubmit}
                     loading={loading}
-                    disabled={!colorCount}
+                    disabled={!colorCount || !settingsValid}
                     className='btn-generate'
                 >
                     Generate
@@ -110,6 +140,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             clampBehavior="strict"
                             min={1}
                             max={10000}
+                            disabled={benchmarkMode}
                         />
                     </Grid.Col>
                     <Grid.Col span={6}>
@@ -126,6 +157,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             min={0}
                             max={100}
                             step={0.001}
+                            disabled={benchmarkMode}
                         />
                     </Grid.Col>
                     <Grid.Col span={6}>
@@ -142,6 +174,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             min={0.01}
                             max={1}
                             step={0.01}
+                            disabled={benchmarkMode}
                         />
                     </Grid.Col>
                     <Grid.Col span={6}>
@@ -157,7 +190,36 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             clampBehavior="strict"
                             min={1}
                             max={100}
+                            disabled={benchmarkMode}
                         />
+                    </Grid.Col>
+                    <Grid.Col span={6}>
+                        <Switch
+                            checked={benchmarkMode}
+                            disabled={loading}
+                            label='Benchmark mode'
+                            onChange={() => {
+                                if (benchmarkMode) {
+                                    onBenchmarkModeChange(false);
+                                    return;
+                                }
+
+                                modals.openConfirmModal({
+                                    title: 'Benchmark mode',
+                                    children: (
+                                        <Text size="sm">
+                                            Enabling benchmark mode will replace the image you uploaded with a benchmark image. The benchmark can run for as long as several minutes. Are you sure?
+                                        </Text>
+                                    ),
+                                    centered: true,
+                                    labels: { confirm: 'Confirm', cancel: 'Cancel' },                
+                                    onConfirm: () => {
+                                        onBenchmarkModeChange(true);
+                                    },
+                                })
+                            }}
+                        />
+
                     </Grid.Col>
                 </Grid>
             </Collapse>
