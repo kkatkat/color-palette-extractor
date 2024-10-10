@@ -35,6 +35,7 @@ export default function Home() {
         setPalette(undefined);
         setLoading(false);
         setProgress(0);
+        setImagePreview(null);
     }
 
     const colorNames = useMemo(() => {
@@ -80,7 +81,7 @@ export default function Home() {
 
     useEffect(() => {
         getImagePreview();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [file, loading, benchmarkMode])
 
     const getColorPalette = async (settings: Partial<Settings>) => {
@@ -144,7 +145,7 @@ export default function Home() {
         if (palette?.length) {
             setPalette(undefined);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [benchmarkMode])
 
     return (
@@ -152,7 +153,7 @@ export default function Home() {
             <Container size='sm' pt={theme.spacing.lg}>
                 <Group justify="space-between" align="center" mb={theme.spacing.md} wrap="nowrap">
                     <Title order={3} c={theme.primaryColor}>Color Palette Extractor</Title>
-                    <Group gap={theme.spacing.xs}>
+                    <Group gap={theme.spacing.xs} wrap="nowrap">
                         <ActionIcon variant="light" size='lg' onClick={() => setInfoModalOpen(true)}>
                             <IconInfoCircle />
                         </ActionIcon>
@@ -169,33 +170,30 @@ export default function Home() {
                             setBenchmarkMode(false);
                         }} />
                     }
-                    {
-                        file &&
-                        <>
-                            <Center>
-                                {imagePreview}
-                            </Center>
-                            <Collapse in={!!palette}>
-                                {
-                                    !!palette &&
-                                    <PalettePreviewRail palette={palette} colorNames={colorNames} />
+                    <>
+                        <Center>
+                            {imagePreview}
+                        </Center>
+                        <Collapse in={!!palette}>
+                            {
+                                !!palette &&
+                                <PalettePreviewRail palette={palette} colorNames={colorNames} />
 
-                                }
-                            </Collapse>
-                            <SettingsForm
-                                onSubmit={(data) => getColorPalette(data)}
-                                loading={loading}
-                                downscaleFactor={downscaleFactor}
-                                onDownscaleFactorChange={(value) => setDownscaleFactor(value)}
-                                benchmarkMode={benchmarkMode}
-                                onBenchmarkModeChange={(enabled) => setBenchmarkMode(enabled)}
-                            />
-                            <Collapse in={!!progress && progress < 100} mt={theme.spacing.md}>
-                                <Progress size="xs" value={progress} />
-                            </Collapse>
-                        </>
-
-                    }
+                            }
+                        </Collapse>
+                        <SettingsForm
+                            onSubmit={(data) => getColorPalette(data)}
+                            loading={loading}
+                            downscaleFactor={downscaleFactor}
+                            onDownscaleFactorChange={(value) => setDownscaleFactor(value)}
+                            benchmarkMode={benchmarkMode}
+                            onBenchmarkModeChange={(enabled) => setBenchmarkMode(enabled)}
+                            disabled={!file}
+                        />
+                        <Collapse in={!!progress && progress < 100} mt={theme.spacing.md}>
+                            <Progress size="xs" value={progress} />
+                        </Collapse>
+                    </>
                 </Paper>
                 {
                     palette &&

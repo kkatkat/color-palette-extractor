@@ -19,9 +19,10 @@ type SettingsFormProps = {
     benchmarkMode: boolean;
     onBenchmarkModeChange: (enabled: boolean) => void;
     loading?: boolean;
+    disabled?: boolean;
 }
 
-export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDownscaleFactorChange, benchmarkMode, onBenchmarkModeChange }: SettingsFormProps) {
+export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDownscaleFactorChange, benchmarkMode, onBenchmarkModeChange, disabled }: SettingsFormProps) {
     const theme = useMantineTheme();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -96,13 +97,13 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     decimalScale={0}
                     suffix={` color${colorCount === 1 ? '' : 's'}`}
                     clampBehavior="strict"
-                    disabled={benchmarkMode}
+                    disabled={benchmarkMode || disabled}
                 />
                 <Button
                     variant={settingsOpen ? 'filled' : 'light'}
                     size='xl'
                     onClick={() => setSettingsOpen(!settingsOpen)}
-                    disabled={loading}
+                    disabled={loading || disabled}
                 >
                     <IconSettings />
                 </Button>
@@ -112,17 +113,17 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     leftSection={<IconWand />}
                     onClick={handleSubmit}
                     loading={loading}
-                    disabled={!colorCount || !settingsValid}
+                    disabled={!colorCount || !settingsValid || disabled}
                     className='btn-generate'
                 >
                     Generate
                 </Button>
             </Group>
-            <Collapse in={settingsOpen}>
+            <Collapse in={settingsOpen && !disabled}>
                 <Divider />
                 <Flex justify='space-between' align='center'>
                     <Text fw={500} my={theme.spacing.xs}>Advanced settings</Text>
-                    <Button variant='subtle' size='compact-xs' disabled={loading} onClick={resetToDefault}>
+                    <Button variant='subtle' size='compact-xs' disabled={loading || disabled} onClick={resetToDefault}>
                         Reset to default
                     </Button>
                 </Flex>
@@ -140,7 +141,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             clampBehavior="strict"
                             min={1}
                             max={10000}
-                            disabled={benchmarkMode}
+                            disabled={benchmarkMode || disabled}
                         />
                     </Grid.Col>
                     <Grid.Col span={6}>
@@ -157,7 +158,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             min={0}
                             max={100}
                             step={0.001}
-                            disabled={benchmarkMode}
+                            disabled={benchmarkMode || disabled}
                         />
                     </Grid.Col>
                     <Grid.Col span={6}>
@@ -174,7 +175,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             min={0.01}
                             max={1}
                             step={0.01}
-                            disabled={benchmarkMode}
+                            disabled={benchmarkMode || disabled}
                         />
                     </Grid.Col>
                     <Grid.Col span={6}>
@@ -190,13 +191,13 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             clampBehavior="strict"
                             min={1}
                             max={100}
-                            disabled={benchmarkMode}
+                            disabled={benchmarkMode || disabled}
                         />
                     </Grid.Col>
                     <Grid.Col span={6}>
                         <Switch
                             checked={benchmarkMode}
-                            disabled={loading}
+                            disabled={loading || disabled}
                             label='Benchmark mode'
                             onChange={() => {
                                 if (benchmarkMode) {
