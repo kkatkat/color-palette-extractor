@@ -26,7 +26,7 @@ export default class KMeans {
         this.clusters = [];
     }
 
-    async fit(data: RGB[], progressCallback?: (progress: number) => void): Promise<RGB[]> {
+    async fit(data: RGB[], progressCallback?: (progress: number) => void): Promise<Result> {
         data = await this.resample(data);
 
         // Initialize centroids if not provided (by benchmark mode = true)
@@ -37,7 +37,7 @@ export default class KMeans {
         }
 
         for (let i = 0; i < this.maxIterations; i++) {
-            console.log('Iteration:', i + 1);
+            //console.log('Iteration:', i + 1);
 
             for (let j = 0; j < this.k; j++) {
                 this.clusters[j] = [];
@@ -70,7 +70,7 @@ export default class KMeans {
             for (let i = 0; i < this.k; i++) {
                 const dist = euclideanDistance(oldCentroids[i], this.centroids[i]);
                 
-                console.log(dist)
+                //console.log(dist)
 
                 if (dist > this.tolerance) {
                     converged = false;
@@ -83,11 +83,11 @@ export default class KMeans {
             }
 
             if (converged || i === this.maxIterations - 1) {
-                return this.centroids;
+                return { palette: this.centroids, clusters: this.clusters };
             }
         }
 
-        return this.centroids;
+        return { palette: this.centroids, clusters: this.clusters };
     };
 
     private async resample(data: RGB[]) {

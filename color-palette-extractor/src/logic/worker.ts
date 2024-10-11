@@ -8,7 +8,7 @@ self.onmessage = async (event: MessageEvent<Settings & { data: RGB[] }>) => {
 
     const start = performance.now();
 
-    const centroids = await kmeans.fit(data, (progress) => {
+    const { palette, clusters } = await kmeans.fit(data, (progress) => {
         self.postMessage({ type: 'progress', payload: progress });
     });
 
@@ -16,5 +16,5 @@ self.onmessage = async (event: MessageEvent<Settings & { data: RGB[] }>) => {
 
     const benchmarkScore = benchmarkMode ? end - start : undefined;
 
-    self.postMessage({ type: 'result', payload: {palette: centroids, benchmarkScore } as Result });
+    self.postMessage({ type: 'result', payload: { palette, clusters, benchmarkScore } as Result });
 };
