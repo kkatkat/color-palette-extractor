@@ -10,6 +10,7 @@ export type Settings = {
 
 export type Result = {
     palette: RGB[];
+    clusters: RGB[][];
     benchmarkScore?: number;
 }
 

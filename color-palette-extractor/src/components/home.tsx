@@ -12,6 +12,7 @@ import InfoModal from "./infoModal";
 import PalettePreviewRail from "./palettePreviewRail";
 import benchmarkImage from '../assets/benchmark.jpg';
 import { modals } from "@mantine/modals";
+import VisualizationCard from "./plots/VisualizationCard";
 
 export default function Home() {
     const theme = useMantineTheme();
@@ -19,6 +20,7 @@ export default function Home() {
     const [file, setFile] = useState<FileWithPath | null>(null);
     const [imageData, setImageData] = useState<RGB[] | null>(null);
     const [palette, setPalette] = useState<RGB[]>();
+    const [clusters, setClusters] = useState<RGB[][]>();
     const [loading, setLoading] = useState(false);
     const [infoModalOpen, setInfoModalOpen] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -95,6 +97,7 @@ export default function Home() {
         const result = await trainKMeans(imageData, settings.colorCount, settings.maxIterations, settings.tolerance, settings.sampleSize, settings.benchmarkMode, (prg) => setProgress(prg * 100));
 
         setPalette(result.palette);
+        setClusters(result.clusters);
         setLoading(false);
 
         if (result.benchmarkScore) {
@@ -197,7 +200,13 @@ export default function Home() {
                 </Paper>
                 {
                     palette &&
-                    <PaletteCard palette={palette} colorNames={colorNames} loading={loading} />
+                    <>
+                        {
+                            clusters && 
+                            <VisualizationCard centroids={palette} clusters={clusters} />
+                        }
+                        <PaletteCard palette={palette} colorNames={colorNames} loading={loading} />
+                    </>
                 }
                 <InfoModal open={infoModalOpen} onClose={() => setInfoModalOpen(false)} />
             </Container>
