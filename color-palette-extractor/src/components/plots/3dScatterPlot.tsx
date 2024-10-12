@@ -1,19 +1,14 @@
 import { useMemo, useRef, useState } from "react"
-import { RGB } from "../../logic/types"
 import HighchartsReact from "highcharts-react-official"
 import Highcharts from "highcharts";
 import Highcharts3d from "highcharts/highcharts-3d";
 import { ActionIcon, Group, SimpleGrid, Slider, Stack, Text } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
+import { PlotProps } from "./types";
 
 Highcharts3d(Highcharts);
 
-type ScatterPlotProps = {
-    centroids: RGB[],
-    clusters: RGB[][],
-}
-
-export default function ScatterPlot({ centroids, clusters }: ScatterPlotProps) {
+export default function ScatterPlot({ centroids, clusters }: PlotProps) {
     const chartRef = useRef(null);
 
     const [alpha, setAlpha] = useState(0);

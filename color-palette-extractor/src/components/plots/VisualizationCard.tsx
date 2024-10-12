@@ -1,14 +1,12 @@
 import { Accordion, Center, Paper, Text, Title, useMantineTheme } from "@mantine/core";
-import { RGB } from "../../logic/types";
 import ScatterPlot from "./3dScatterPlot";
-import { IconChartScatter3d } from "@tabler/icons-react";
+import { IconChartBar, IconChartScatter3d } from "@tabler/icons-react";
+import PixelsPerCluster from "./PixelsPerCluster";
+import { PlotProps } from "./types";
 
-type VisualizationContainerProps = {
-    centroids: RGB[],
-    clusters: RGB[][],
-}
+type VisualizationContainerProps = PlotProps;
 
-export default function VisualizationCard({ centroids, clusters }: VisualizationContainerProps) {
+export default function VisualizationCard({ centroids, clusters, colorNames }: VisualizationContainerProps) {
     const theme = useMantineTheme();
 
     return (
@@ -16,10 +14,18 @@ export default function VisualizationCard({ centroids, clusters }: Visualization
             <Title order={5} mb={theme.spacing.md}>Visualizations</Title>
             <Accordion multiple>
                 <Accordion.Item key='3dScatterPlot' value="3dScatterPlot">
-                    <AccordionControl icon={<IconChartScatter3d color={theme.colors.customColor[6]} />} title="3D Scatter Plot" />
+                    <AccordionControl icon={<IconChartScatter3d color={theme.colors.customColor[6]} />} title="3D Scatterplot" />
                     <Accordion.Panel>
                         <Center w={'100%'}>
-                            <ScatterPlot centroids={centroids} clusters={clusters} />
+                            <ScatterPlot centroids={centroids} clusters={clusters} colorNames={colorNames} />
+                        </Center>
+                    </Accordion.Panel>
+                </Accordion.Item>
+                <Accordion.Item key='ColorsPerCluster' value="ColorsPerCluster">
+                    <AccordionControl icon={<IconChartBar color={theme.colors.customColor[6]}/>} title="Pixels per cluster"/>
+                    <Accordion.Panel>
+                        <Center w={'100%'}>
+                            <PixelsPerCluster centroids={centroids} clusters={clusters} colorNames={colorNames}/>
                         </Center>
                     </Accordion.Panel>
                 </Accordion.Item>
