@@ -1,8 +1,10 @@
-import { useMemo, useRef } from "react"
+import { useMemo, useRef, useState } from "react"
 import { RGB } from "../../logic/types"
 import HighchartsReact from "highcharts-react-official"
 import Highcharts from "highcharts";
 import Highcharts3d from "highcharts/highcharts-3d";
+import { ActionIcon, Group, SimpleGrid, Slider, Stack, Text } from "@mantine/core";
+import { IconRefresh } from "@tabler/icons-react";
 
 Highcharts3d(Highcharts);
 
@@ -14,6 +16,14 @@ type ScatterPlotProps = {
 export default function ScatterPlot({ centroids, clusters }: ScatterPlotProps) {
     const chartRef = useRef(null);
 
+    const [alpha, setAlpha] = useState(0);
+    const [beta, setBeta] = useState(0);
+    const [viewDistance, setViewDistance] = useState(2);
+
+    const alphaSliderRef = useRef(null);
+    const betaSliderRef = useRef(null);
+    const viewDistanceSliderRef = useRef(null);
+
     const chartOptions = useMemo<Highcharts.Options>(() => {
         return {
             title: undefined,
@@ -23,10 +33,10 @@ export default function ScatterPlot({ centroids, clusters }: ScatterPlotProps) {
                 animation: false,
                 options3d: {
                     enabled: true,
-                    alpha: 16,
-                    beta: 30,
+                    alpha: alpha,
+                    beta: beta,
                     depth: 355,
-                    viewDistance: 5,
+                    viewDistance: viewDistance,
                     fitToPlot: false,
                     frame: {
                         bottom: { size: 1, color: 'rgba(0,0,0,0.02)' },
@@ -65,11 +75,10 @@ export default function ScatterPlot({ centroids, clusters }: ScatterPlotProps) {
                 min: 0,
                 max: 255,
             },
-            legend: false,
             tooltip: {
                 pointFormat: 'Red: {point.x}</br>Green: {point.y}</br>Blue: {point.z}',
             },
-            series: clusters.map((cluster, index) => {
+            series: [...clusters.map((cluster, index) => {
                 return {
                     name: `Cluster ${index + 1}`,
                     color: `rgba(${centroids[index]}, 1)`,
@@ -78,7 +87,7 @@ export default function ScatterPlot({ centroids, clusters }: ScatterPlotProps) {
                             x: pixel[0],
                             y: pixel[1],
                             z: pixel[2],
-                            color: `rgba(${pixel}, 1)`,
+                            color: `rgba(${pixel}, 0.5)`,
                         }
                     }),
                     type: 'scatter3d',
@@ -86,11 +95,99 @@ export default function ScatterPlot({ centroids, clusters }: ScatterPlotProps) {
                         symbol: 'circle',
                     }
                 }
-            })
+            }),
+            {
+                name: 'Centroids',
+                color: 'black',	
+                data: centroids.map((centroid) => {
+                    return {
+                        x: centroid[0],
+                        y: centroid[1],
+                        z: centroid[2],
+                        color: `rgba(${centroid}, 1)`,
+                    }
+                }),
+                type: 'scatter3d',
+                marker: {
+                    radius: 10,
+                    symbol: 'diamond',
+                },
+                zIndex: 1000,
+            }]
         }
-    }, [centroids, clusters]);
+    }, [centroids, clusters, alpha, beta, viewDistance]);
+
+    const handleFieldReset = (field: 'alpha' | 'beta' | 'viewDistance') => {
+        switch (field) {
+            case 'alpha':
+                //alphaSliderRef.current?.reset(); // TODO fix this = slider should reset to its default value
+                setAlpha(0)
+                break;
+            case 'beta':
+                setBeta(0);
+                break;
+            case 'viewDistance':
+                setViewDistance(2);
+                break;
+        }
+    }
 
     return (
-        <HighchartsReact highcharts={Highcharts} options={chartOptions} ref={chartRef}/>
+        <Stack w={'100%'}>
+            <SimpleGrid cols={{ sm: 3, xs: 1}}>
+                <SliderField 
+                    label="Alpha" 
+                    min={-90} 
+                    max={90} 
+                    defaultValue={0} 
+                    ref={alphaSliderRef} 
+                    onChangeEnd={(value) => setAlpha(value)} 
+                    onReset={() => handleFieldReset('alpha')}
+                />
+                <SliderField
+                    label="Beta" 
+                    min={-180} 
+                    max={180} 
+                    defaultValue={0} 
+                    ref={betaSliderRef} 
+                    onChangeEnd={(value) => setBeta(value)} 
+                    onReset={() => handleFieldReset('beta')}
+                />
+                <SliderField
+                    label="View distance" 
+                    min={1} 
+                    max={10} 
+                    defaultValue={2} 
+                    ref={viewDistanceSliderRef} 
+                    onChangeEnd={(value) => setViewDistance(value)} 
+                    onReset={() => handleFieldReset('viewDistance')}
+                />
+            </SimpleGrid>
+            <HighchartsReact highcharts={Highcharts} options={chartOptions} ref={chartRef} />
+        </Stack>
     )
+}
+
+type SliderFieldProps = {
+    label: string;
+    min: number;
+    max: number;
+    defaultValue: number;
+    ref: React.RefObject<HTMLDivElement>;
+    onChangeEnd: (value: number) => void;
+    onReset: () => void;
+};
+
+function SliderField({ label, min, max, defaultValue, ref, onChangeEnd, onReset }: SliderFieldProps) {
+    return (
+        <div>
+            <Group justify="space-between" align="center">
+                <Text size="sm">{label}</Text>
+                <ActionIcon variant="light" size='xs' onClick={onReset}>
+                    <IconRefresh />
+                </ActionIcon>
+            </Group>
+            <Slider size='sm' defaultValue={defaultValue} min={min} max={max} step={1} onChangeEnd={onChangeEnd} ref={ref} />
+        </div>
+    );
 }

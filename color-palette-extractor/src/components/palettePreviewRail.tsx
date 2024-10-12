@@ -5,16 +5,6 @@ import { RGB } from "../logic/types";
 export default function PalettePreviewRail({ palette, colorNames }: { palette: RGB[], colorNames: Map<RGB, string> }) {
     const theme = useMantineTheme();
 
-    const dynamicTimeout = (index: number) => {
-        if (index <= 5) {
-            return 300;
-        } else if (index <= 20) {
-            return 800;
-        } 
-
-        return 1000;
-    }
-
     return (
         <Paper withBorder shadow="xs" mt={theme.spacing.md} p={0} style={{overflow: 'hidden'}}>
             <Group justify="center" gap={0} m={0} p={0} grow>
@@ -40,20 +30,18 @@ export default function PalettePreviewRail({ palette, colorNames }: { palette: R
                                     const element = document.getElementById(`color-${index}`);
                                     element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-                                    const timeout = dynamicTimeout(index);
-
                                     // make the element 'pop' (scale up and down)
                                     if (element) {
                                         setTimeout(() => {
                                             element.style.transform = 'scale(1.3)';
-                                        }, timeout);
+                                        }, 1000);
                                     }
 
                                     setTimeout(() => {
                                         if (element) {
                                             element.style.transform = 'scale(1)';
                                         }
-                                    }, timeout + 400);
+                                    }, 1400);
                                 }}
                             />
                         </Tooltip>
