@@ -78,7 +78,7 @@ export default function ScatterPlot({ centroids, clusters }: ScatterPlotProps) {
             tooltip: {
                 pointFormat: 'Red: {point.x}</br>Green: {point.y}</br>Blue: {point.z}',
             },
-            series: [...clusters.map((cluster, index) => {
+            series: [...clusters.map((cluster, index): Highcharts.SeriesScatter3dOptions => {
                 return {
                     name: `Cluster ${index + 1}`,
                     color: `rgba(${centroids[index]}, 1)`,
@@ -113,7 +113,7 @@ export default function ScatterPlot({ centroids, clusters }: ScatterPlotProps) {
                     symbol: 'diamond',
                 },
                 zIndex: 1000,
-            }]
+            } as Highcharts.SeriesScatter3dOptions]
         }
     }, [centroids, clusters, alpha, beta, viewDistance]);
 
