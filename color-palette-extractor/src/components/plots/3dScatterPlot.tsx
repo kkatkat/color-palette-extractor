@@ -6,7 +6,6 @@ import { ActionIcon, Group, SimpleGrid, Slider, Stack, Text } from "@mantine/cor
 import { IconRefresh } from "@tabler/icons-react";
 import { PlotProps } from "./types";
 import { RGB } from "../../logic/types";
-import React from "react";
 
 Highcharts3d(Highcharts);
 
