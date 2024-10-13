@@ -5,8 +5,12 @@ import Highcharts3d from "highcharts/highcharts-3d";
 import { ActionIcon, Group, SimpleGrid, Slider, Stack, Text } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { PlotProps } from "./types";
+import { RGB } from "../../logic/types";
+import React from "react";
 
 Highcharts3d(Highcharts);
+
+const MAX_POINTS = 2000;
 
 export default function ScatterPlot({ centroids, clusters }: PlotProps) {
     const chartRef = useRef(null);
@@ -15,9 +19,28 @@ export default function ScatterPlot({ centroids, clusters }: PlotProps) {
     const [beta, setBeta] = useState(0);
     const [viewDistance, setViewDistance] = useState(2);
 
-    const alphaSliderRef = useRef(null);
-    const betaSliderRef = useRef(null);
-    const viewDistanceSliderRef = useRef(null);
+    // state for the sliders because ref.current.value does not work as expected
+    const [alphaState, setAlphaState] = useState(0);
+    const [betaState, setBetaState] = useState(0);
+    const [viewDistanceState, setViewDistanceState] = useState(2);
+
+
+
+    // Reduce the number of points in the chart if there are too many
+    const reducePoints = (clusters: RGB[][]) => {
+        const totalPoints = clusters.reduce((sum, cluster) => sum + cluster.length, 0);
+        if (totalPoints <= MAX_POINTS) return clusters;
+
+        const reducedClusters = clusters.map(cluster => {
+            const clusterSize = Math.floor((cluster.length / totalPoints) * MAX_POINTS);
+            const shuffled = cluster.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, clusterSize);
+        });
+
+        return reducedClusters;
+    };
+
+    const reducedClusters = useMemo(() => reducePoints(clusters), [clusters]);
 
     const chartOptions = useMemo<Highcharts.Options>(() => {
         return {
@@ -73,7 +96,7 @@ export default function ScatterPlot({ centroids, clusters }: PlotProps) {
             tooltip: {
                 pointFormat: 'Red: {point.x}</br>Green: {point.y}</br>Blue: {point.z}',
             },
-            series: [...clusters.map((cluster, index): Highcharts.SeriesScatter3dOptions => {
+            series: [...reducedClusters.map((cluster, index): Highcharts.SeriesScatter3dOptions => {
                 return {
                     name: `Cluster ${index + 1}`,
                     color: `rgba(${centroids[index]}, 1)`,
@@ -93,7 +116,7 @@ export default function ScatterPlot({ centroids, clusters }: PlotProps) {
             }),
             {
                 name: 'Centroids',
-                color: 'black',	
+                color: 'black',
                 data: centroids.map((centroid) => {
                     return {
                         x: centroid[0],
@@ -110,18 +133,20 @@ export default function ScatterPlot({ centroids, clusters }: PlotProps) {
                 zIndex: 1000,
             } as Highcharts.SeriesScatter3dOptions]
         }
-    }, [centroids, clusters, alpha, beta, viewDistance]);
+    }, [centroids, reducedClusters, alpha, beta, viewDistance]);
 
     const handleFieldReset = (field: 'alpha' | 'beta' | 'viewDistance') => {
         switch (field) {
             case 'alpha':
-                //alphaSliderRef.current?.reset(); // TODO fix this = slider should reset to its default value
+                setAlphaState(0);
                 setAlpha(0)
                 break;
             case 'beta':
+                setBetaState(0);
                 setBeta(0);
                 break;
             case 'viewDistance':
+                setViewDistanceState(2);
                 setViewDistance(2);
                 break;
         }
@@ -129,32 +154,32 @@ export default function ScatterPlot({ centroids, clusters }: PlotProps) {
 
     return (
         <Stack w={'100%'}>
-            <SimpleGrid cols={{ sm: 3, xs: 1}}>
-                <SliderField 
-                    label="Alpha" 
-                    min={-90} 
-                    max={90} 
-                    defaultValue={0} 
-                    ref={alphaSliderRef} 
-                    onChangeEnd={(value) => setAlpha(value)} 
+            <SimpleGrid cols={{ sm: 3, xs: 1 }}>
+                <SliderField
+                    label="Alpha"
+                    min={-90}
+                    max={90}
+                    value={alphaState}
+                    onChangeEnd={(value) => setAlpha(value)}
+                    onChange={(value) => setAlphaState(value)}
                     onReset={() => handleFieldReset('alpha')}
                 />
                 <SliderField
-                    label="Beta" 
-                    min={-180} 
-                    max={180} 
-                    defaultValue={0} 
-                    ref={betaSliderRef} 
-                    onChangeEnd={(value) => setBeta(value)} 
+                    label="Beta"
+                    min={-180}
+                    max={180}
+                    value={betaState}
+                    onChangeEnd={(value) => setBeta(value)}
+                    onChange={(value) => setBetaState(value)}
                     onReset={() => handleFieldReset('beta')}
                 />
                 <SliderField
-                    label="View distance" 
-                    min={1} 
-                    max={10} 
-                    defaultValue={2} 
-                    ref={viewDistanceSliderRef} 
-                    onChangeEnd={(value) => setViewDistance(value)} 
+                    label="View distance"
+                    min={1}
+                    max={10}
+                    value={viewDistanceState}
+                    onChangeEnd={(value) => setViewDistance(value)}
+                    onChange={(value) => setViewDistanceState(value)}
                     onReset={() => handleFieldReset('viewDistance')}
                 />
             </SimpleGrid>
@@ -167,13 +192,13 @@ type SliderFieldProps = {
     label: string;
     min: number;
     max: number;
-    defaultValue: number;
-    ref: React.RefObject<HTMLDivElement>;
+    value: number;
     onChangeEnd: (value: number) => void;
+    onChange: (value: number) => void;
     onReset: () => void;
 };
 
-function SliderField({ label, min, max, defaultValue, ref, onChangeEnd, onReset }: SliderFieldProps) {
+function SliderField({ label, min, max, value, onChangeEnd, onChange, onReset }: SliderFieldProps) {
     return (
         <div>
             <Group justify="space-between" align="center">
@@ -182,7 +207,7 @@ function SliderField({ label, min, max, defaultValue, ref, onChangeEnd, onReset 
                     <IconRefresh />
                 </ActionIcon>
             </Group>
-            <Slider size='sm' defaultValue={defaultValue} min={min} max={max} step={1} onChangeEnd={onChangeEnd} ref={ref} />
+            <Slider size='sm' value={value} min={min} max={max} step={1} onChangeEnd={onChangeEnd} onChange={onChange} />
         </div>
     );
-}
+};

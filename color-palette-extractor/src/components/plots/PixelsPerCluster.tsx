@@ -27,7 +27,7 @@ export default function PixelsPerCluster({centroids, clusters, colorNames}: Plot
             },
             series: [{
                 type: 'bar',
-                name: 'Colors per cluster',
+                name: 'Pixels in cluster',
                 data: centroids.map((centroid, index) => {
                     return {
                         color: `rgb(${centroid}, 1)`,
