@@ -41,7 +41,7 @@ export default function Home() {
     }
 
     const colorNames = useMemo(() => {
-        if (!palette) return new Map();
+        if (!palette) return new Map<RGB, string>();
 
         const colorNamesMap: Map<RGB, string> = new Map();
 
@@ -203,7 +203,7 @@ export default function Home() {
                     <>
                         {
                             clusters && 
-                            <VisualizationCard centroids={palette} clusters={clusters} />
+                            <VisualizationCard centroids={palette} clusters={clusters} colorNames={colorNames} />
                         }
                         <PaletteCard palette={palette} colorNames={colorNames} loading={loading} />
                     </>
