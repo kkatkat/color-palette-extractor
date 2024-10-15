@@ -20,7 +20,7 @@ export function getPixels(array: Uint8ClampedArray): RGB[] {
 }
 
 export function euclideanDistance(a: RGB, b: RGB) {
-    return Math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2 + (a[2] - b[2])**2);
+    return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2);
 }
 
 export function randomInt(min: number, max: number) {
@@ -38,4 +38,22 @@ export function getClosestColorName(color: RGB): string {
     return distances.reduce((prev, current) => {
         return prev.distance < current.distance ? prev : current;
     }, distances[0]).name;
+}
+
+export function scrollToColor(index: number) {
+    const element = document.getElementById(`color-${index}`);
+    element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // make the element 'pop' (scale up and down)
+    if (element) {
+        setTimeout(() => {
+            element.style.transform = 'scale(1.3)';
+        }, 1000);
+    }
+
+    setTimeout(() => {
+        if (element) {
+            element.style.transform = 'scale(1)';
+        }
+    }, 1400);
 }

@@ -1,5 +1,6 @@
 import { Box, Group, Paper, Tooltip, useMantineTheme } from "@mantine/core";
 import { RGB } from "../logic/types";
+import { scrollToColor } from "../logic/functions";
 
 
 export default function PalettePreviewRail({ palette, colorNames }: { palette: RGB[], colorNames: Map<RGB, string> }) {
@@ -27,21 +28,7 @@ export default function PalettePreviewRail({ palette, colorNames }: { palette: R
                                     (e.currentTarget as HTMLElement).style.zIndex = '2';
                                 }}
                                 onClick={() => {
-                                    const element = document.getElementById(`color-${index}`);
-                                    element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                                    // make the element 'pop' (scale up and down)
-                                    if (element) {
-                                        setTimeout(() => {
-                                            element.style.transform = 'scale(1.3)';
-                                        }, 1000);
-                                    }
-
-                                    setTimeout(() => {
-                                        if (element) {
-                                            element.style.transform = 'scale(1)';
-                                        }
-                                    }, 1400);
+                                    scrollToColor(index);
                                 }}
                             />
                         </Tooltip>

@@ -203,7 +203,7 @@ export default function Home() {
                     <>
                         {
                             clusters && 
-                            <VisualizationCard centroids={palette} clusters={clusters} colorNames={colorNames} />
+                            <VisualizationCard centroids={palette} clusters={clusters} colorNames={colorNames} loading={loading}/>
                         }
                         <PaletteCard palette={palette} colorNames={colorNames} loading={loading} />
                     </>

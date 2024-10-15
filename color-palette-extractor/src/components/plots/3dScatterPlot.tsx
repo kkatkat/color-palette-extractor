@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react"
 import HighchartsReact from "highcharts-react-official"
 import Highcharts from "highcharts";
 import Highcharts3d from "highcharts/highcharts-3d";
-import { ActionIcon, Group, SimpleGrid, Slider, Stack, Text } from "@mantine/core";
+import { ActionIcon, Center, Group, Loader, SimpleGrid, Slider, Stack, Text } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { PlotProps } from "./types";
 import { RGB } from "../../logic/types";
@@ -11,7 +11,7 @@ Highcharts3d(Highcharts);
 
 const MAX_POINTS = 2000;
 
-export default function ScatterPlot({ centroids, clusters }: PlotProps) {
+export default function ScatterPlot({ centroids, clusters, loading }: PlotProps) {
     const chartRef = useRef(null);
 
     const [alpha, setAlpha] = useState(0);
@@ -149,6 +149,14 @@ export default function ScatterPlot({ centroids, clusters }: PlotProps) {
                 setViewDistance(2);
                 break;
         }
+    }
+
+    if (loading) {
+        return (
+            <Center>
+                <Loader/>
+            </Center>
+        )
     }
 
     return (
