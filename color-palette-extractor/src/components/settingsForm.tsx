@@ -1,8 +1,9 @@
 import { Button, Collapse, Divider, Flex, Grid, Group, NumberInput, Stack, Switch, Text, useMantineTheme } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { IconWand, IconSettings } from "@tabler/icons-react";
+import { IconWand, IconSettings, IconPuzzle } from "@tabler/icons-react";
 import { Settings } from "../logic/types";
 import { modals } from "@mantine/modals";
+import PluginsDialog from "./plugins/PluginsDialog";
 
 const BENCHMARK_SETTINGS: Omit<Settings & { downscaleFactor: number }, 'benchmarkMode'> = {
     colorCount: 5,
@@ -30,6 +31,8 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
     const [maxIterations, setMaxIterations] = useState<number>(100);
     const [sampleSize, setSampleSize] = useState<number>(1.00);
     const [tolerance, setTolerance] = useState<number>(0.001);
+
+    const [pluginsOpen, setPluginsOpen] = useState(false);
 
     const validate = useCallback(() => {
         return [
@@ -82,7 +85,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
 
     return (
         <Stack>
-            <Group justify='space-between' mt={theme.spacing.md}>
+            <Group justify='space-between' mt={theme.spacing.md} gap={theme.spacing.sm}>
                 <NumberInput
                     size="xl"
                     placeholder="Number of colors"
@@ -104,8 +107,18 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     size='xl'
                     onClick={() => setSettingsOpen(!settingsOpen)}
                     disabled={loading || disabled}
+                    px={theme.spacing.md}
                 >
-                    <IconSettings />
+                    <IconSettings/>
+                </Button>
+                <Button
+                    variant='light'
+                    size='xl'
+                    onClick={() => setPluginsOpen(true)}
+                    disabled={loading || disabled}
+                    px={theme.spacing.md}
+                >
+                    <IconPuzzle/>
                 </Button>
                 <Button
                     size="xl"
@@ -224,6 +237,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     </Grid.Col>
                 </Grid>
             </Collapse>
+            <PluginsDialog open={pluginsOpen} onClose={() => setPluginsOpen(false)} showSearch/>
         </Stack>
     )
 }

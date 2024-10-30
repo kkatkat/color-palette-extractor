@@ -4,8 +4,6 @@ import HighchartsReact from "highcharts-react-official";
 import { useMemo } from "react";
 import { scrollToColor } from "../../logic/functions";
 
-// TODO make chart be as tall as the number of clusters
-
 export default function PixelsPerCluster({ centroids, clusters, colorNames }: PlotProps) {
 
     const chartOptions = useMemo<Highcharts.Options>(() => {
