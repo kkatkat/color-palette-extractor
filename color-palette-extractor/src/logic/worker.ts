@@ -1,20 +1,21 @@
+import { Algorithm, AlgorithmSettings } from "./algorithm";
 import KMeans from "./kmeans";
-import { Result, RGB, Settings } from "./types";
+import { Result, RGB } from "./types";
 
-self.onmessage = async (event: MessageEvent<Settings & { data: RGB[] }>) => {
-    const { data, colorCount, maxIterations, tolerance, sampleSize, benchmarkMode } = event.data;
+self.onmessage = async (event: MessageEvent<{settings: AlgorithmSettings<Algorithm.KMeans> } & { data: RGB[] }>) => {
+    const { data, settings } = event.data;
 
-    const kmeans = new KMeans(colorCount, maxIterations, tolerance, sampleSize, benchmarkMode);
+    const kmeans = new KMeans(settings);
 
     const start = performance.now();
 
-    const { palette, clusters } = await kmeans.fit(data, (progress) => {
+    const result = await kmeans.fit(data, (progress) => {
         self.postMessage({ type: 'progress', payload: progress });
     });
 
     const end = performance.now();
 
-    const benchmarkScore = benchmarkMode ? end - start : undefined;
+    const benchmarkScore = settings.benchmarkMode ? end - start : undefined;
 
-    self.postMessage({ type: 'result', payload: { palette, clusters, benchmarkScore } as Result });
+    self.postMessage({ type: 'result', payload: { ...result, benchmarkScore } as Result });
 };

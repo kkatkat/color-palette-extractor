@@ -31,6 +31,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
     const [maxIterations, setMaxIterations] = useState<number>(100);
     const [sampleSize, setSampleSize] = useState<number>(1.00);
     const [tolerance, setTolerance] = useState<number>(0.001);
+    const [kmeansPlusPlus, setKmeansPlusPlus] = useState<boolean>(true);
 
     const [pluginsOpen, setPluginsOpen] = useState(false);
 
@@ -207,6 +208,18 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             disabled={benchmarkMode || disabled}
                         />
                     </Grid.Col>
+                    <Grid.Col span={6}>
+                        <Switch
+                            checked={kmeansPlusPlus}
+                            disabled={loading || disabled}
+                            label='k-means++'
+                            onChange={() => setKmeansPlusPlus(!kmeansPlusPlus)}
+                        />
+
+                    </Grid.Col>
+                </Grid>
+                <Divider my={theme.spacing.md}/>
+                <Grid>
                     <Grid.Col span={6}>
                         <Switch
                             checked={benchmarkMode}

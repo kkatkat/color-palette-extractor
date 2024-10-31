@@ -14,6 +14,7 @@ export type Settings = {
 export type Result = {
     palette: RGB[];
     clusters: RGB[][];
+    algorithm: Algorithm;
     benchmarkScore?: number;
 }
 

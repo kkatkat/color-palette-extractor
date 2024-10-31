@@ -1,3 +1,4 @@
+import { Algorithm, AlgorithmSettings } from "./algorithm";
 import { euclideanDistance, randomInt } from "./functions";
 import { Result, RGB, WorkerMessage } from "./types";
 
@@ -17,7 +18,7 @@ export default class KMeans {
     private centroids: RGB[];
     private clusters: RGB[][];
     
-    constructor(k: number = 5, maxIterations: number = 100, tolerance: number = 0.001, sampleSize: number = 1, benchmarkMode: boolean = false) {
+    constructor({k = 5, maxIterations = 100, tolerance = 0.001, sampleSize = 1, benchmarkMode = false}: AlgorithmSettings<Algorithm.KMeans>) {
         this.k = k;
         this.maxIterations = maxIterations;
         this.tolerance = tolerance;
@@ -83,11 +84,11 @@ export default class KMeans {
             }
 
             if (converged || i === this.maxIterations - 1) {
-                return { palette: this.centroids, clusters: this.clusters };
+                return { palette: this.centroids, clusters: this.clusters, algorithm: Algorithm.KMeans };
             }
         }
 
-        return { palette: this.centroids, clusters: this.clusters };
+        return { palette: this.centroids, clusters: this.clusters, algorithm: Algorithm.KMeans };
     };
 
     private async resample(data: RGB[]) {
@@ -116,7 +117,11 @@ export async function trainKMeans(data: RGB[], colorCount?: number, maxIteration
         const worker = new Worker(new URL('./worker.ts', import.meta.url), {
             type: 'module',
         });
-        worker.postMessage({ data, colorCount, maxIterations, tolerance, sampleSize, benchmarkMode });
+        
+        worker.postMessage({ 
+            data, 
+            settings: { k: colorCount, maxIterations, tolerance, sampleSize, benchmarkMode }
+        });
 
         worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
             if (event.data.type === 'progress' && onProgress) {
