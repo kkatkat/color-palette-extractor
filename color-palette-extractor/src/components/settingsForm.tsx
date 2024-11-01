@@ -1,23 +1,23 @@
 import { Button, Collapse, Divider, Flex, Grid, Group, NumberInput, Select, Stack, Switch, Text, useMantineTheme } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconWand, IconSettings, IconPuzzle } from "@tabler/icons-react";
-import { Settings } from "../logic/types";
 import { modals } from "@mantine/modals";
 import PluginsDialog from "./plugins/PluginsDialog";
-import { Algorithm, AlgorithmType } from "../logic/algorithm";
+import { Algorithm, AlgorithmDefinition, AlgorithmSettings, AlgorithmType } from "../logic/algorithm";
 import { algorithmDefinitions } from "../logic/algorithmDefinitions";
 import AutoInput from "./generic/AutoInput";
 
-const BENCHMARK_SETTINGS: Omit<Settings & { downscaleFactor: number }, 'benchmarkMode'> = {
-    colorCount: 5,
+const BENCHMARK_SETTINGS: AlgorithmSettings<Algorithm.KMeans> = {
+    k: 5,
     maxIterations: 40,
     sampleSize: 1.00,
     tolerance: 0,
-    downscaleFactor: 1,
+    kMeansPlusPlus: false,
+    benchmarkMode: true,
 }
 
 type SettingsFormProps = {
-    onSubmit: (data: Partial<Settings>) => void;
+    onSubmit: (parameters: AlgorithmSettings<Algorithm>, algorithmDefinition: AlgorithmDefinition<Algorithm>) => void;
     downscaleFactor: number;
     onDownscaleFactorChange: (value: number) => void;
     benchmarkMode: boolean;
@@ -30,8 +30,9 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
     const theme = useMantineTheme();
 
     const [algorithm, setAlgorithm] = useState<AlgorithmType>('k-means');
-    const [parameters, setParameters] = useState<Record<string, number | boolean | string>>({});
+    const [parameters, setParameters] = useState<AlgorithmSettings<Algorithm>>({});
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [pluginsOpen, setPluginsOpen] = useState(false);
 
     const algorithmDefinition = useMemo(() => algorithmDefinitions[algorithm], [algorithm]);
 
@@ -39,35 +40,18 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
         resetParameters(algorithm);
     }, [algorithmDefinition])
 
-    console.log(parameters)
-
-    const [colorCount, setColorCount] = useState<number>(5);
-    const [maxIterations, setMaxIterations] = useState<number>(100);
-    const [sampleSize, setSampleSize] = useState<number>(1.00);
-    const [tolerance, setTolerance] = useState<number>(0.001);
-
-    const [pluginsOpen, setPluginsOpen] = useState(false);
-
     const validate = useCallback(() => {
-        return algorithmDefinition.settings.every((setting) => setting.validate?.(parameters[setting.settingName]) ?? true);
+        return algorithmDefinition.settings.every(({ validate, settingName }) => validate?.(parameters[settingName]) ?? true);
     }, [parameters]);
 
     const settingsValid = useMemo(() => validate(), [validate]);
-
-    console.log(settingsValid)
 
     const handleSubmit = () => {
         if (!validate()) {
             return;
         }
 
-        onSubmit({
-            colorCount,
-            maxIterations,
-            sampleSize,
-            tolerance,
-            benchmarkMode
-        })
+        onSubmit(parameters, algorithmDefinition);
     }
 
     const resetToDefault = () => {
@@ -82,16 +66,15 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
         setParameters(algorithmDefinitions[algorithm].settings.reduce((acc, setting) => {
             acc[setting.settingName] = setting.startingValue;
             return acc;
-        }, {} as Record<string, number | boolean | string>))
+        }, {} as AlgorithmSettings<Algorithm>))
     }
 
     useEffect(() => {
         if (benchmarkMode) {
-            setColorCount(BENCHMARK_SETTINGS.colorCount);
-            setMaxIterations(BENCHMARK_SETTINGS.maxIterations);
-            setSampleSize(BENCHMARK_SETTINGS.sampleSize);
-            setTolerance(BENCHMARK_SETTINGS.tolerance);
-            onDownscaleFactorChange(BENCHMARK_SETTINGS.downscaleFactor);
+            setAlgorithm('k-means');
+            setParameters(BENCHMARK_SETTINGS);
+
+            onDownscaleFactorChange(1);
         } else {
             resetToDefault();
         }
@@ -108,28 +91,15 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             {...setting} 
                             value={parameters[setting.settingName]} 
                             onChange={(value) => setParameters({...parameters, [setting.settingName]: value})}
-                            disabled={benchmarkMode || disabled}
-                            error={!setting.validate?.(parameters[setting.settingName])}
-                            suffix={setting.settingName === 'k' ? ` color${parameters[setting.settingName] === 1 ? '' : 's'}` : undefined}
+                            extraProps={{
+                                disabled: benchmarkMode || disabled,
+                                error: !setting.validate?.(parameters[setting.settingName]),
+                                suffix: setting.settingName === 'k' ? ` color${parameters[setting.settingName] === 1 ? '' : 's'}` : undefined,
+                            }}
+
                         />
                     ))
                 }
-                {/* <NumberInput
-                    size="xl"
-                    placeholder="Number of colors"
-                    value={colorCount}
-                    onChange={(value) => setColorCount(+value)}
-                    min={1}
-                    max={1000}
-                    flex={1}
-                    allowDecimal={false}
-                    allowLeadingZeros={false}
-                    allowNegative={false}
-                    decimalScale={0}
-                    suffix={` color${colorCount === 1 ? '' : 's'}`}
-                    clampBehavior="strict"
-                    disabled={benchmarkMode || disabled}
-                /> */}
                 <Button
                     variant={settingsOpen ? 'filled' : 'light'}
                     size='xl'
@@ -154,14 +124,14 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     leftSection={<IconWand />}
                     onClick={handleSubmit}
                     loading={loading}
-                    disabled={!colorCount || !settingsValid || disabled}
+                    disabled={!settingsValid || disabled}
                     className='btn-generate'
                 >
                     Generate
                 </Button>
             </Group>
             <Collapse in={settingsOpen && !disabled}>
-                <Divider />
+                <Divider/>
                 <Flex justify='space-between' align='center'>
                     <Text fw={500} my={theme.spacing.xs}>Advanced settings</Text>
                     <Button variant='subtle' size='compact-xs' disabled={loading || disabled} onClick={resetToDefault}>
@@ -174,26 +144,29 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     onChange={(value) => setAlgorithm(value as AlgorithmType)}
                     data={Object.values(Algorithm)}
                     allowDeselect={false}
+                    disabled={benchmarkMode || disabled}
                 />
-                <Divider my={theme.spacing.md} />
-                <Grid align="center">
+                <Divider my={theme.spacing.md} label='Algorithm-specific settings' labelPosition='left' />
+                <Grid>
                     {
                         algorithmDefinition.settings.filter((setting) => !setting.primarySetting).map((setting) => (
-                            <Grid.Col span={6}>
+                            <Grid.Col span={12}>
                                 <AutoInput 
                                     {...setting} 
                                     value={parameters[setting.settingName]} 
                                     onChange={(value) => setParameters({...parameters, [setting.settingName]: value})}
-                                    disabled={benchmarkMode || disabled}
-                                    error={setting.validate ? !setting.validate(parameters[setting.settingName]) : false}
+                                    extraProps={{
+                                        disabled: benchmarkMode || disabled,
+                                        error: !setting.validate?.(parameters[setting.settingName]),
+                                    }}
                                 />
                             </Grid.Col>
                         ))
                     }
                 </Grid>
-                <Divider my={theme.spacing.md} />
-                <Grid align="center">
-                    <Grid.Col span={6}>
+                <Divider my={theme.spacing.md} label='General settings' labelPosition='left' />
+                <Grid>
+                    <Grid.Col span={12}>
                         <NumberInput
                             label="Downscale factor"
                             size="sm"
@@ -209,9 +182,8 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             disabled={benchmarkMode || disabled}
                         />
                     </Grid.Col>
-                    <Grid.Col span={6}>
+                    <Grid.Col span={12}>
                         <Switch
-                            mt={theme.spacing.lg}
                             checked={benchmarkMode}
                             disabled={loading || disabled}
                             label='Benchmark mode'

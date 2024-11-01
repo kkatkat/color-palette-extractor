@@ -3,9 +3,8 @@ import { FileWithPath } from "@mantine/dropzone";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DropzoneWrapper from "./dropzone";
 import { getClosestColorName, getPixels } from "../logic/functions";
-import { RGB, Settings } from "../logic/types";
+import { RGB } from "../logic/types";
 import SettingsForm from "./settingsForm";
-import { trainKMeans } from "../logic/kmeans";
 import PaletteCard from "./paletteCard";
 import { IconBrandGithub, IconInfoCircle, IconX } from "@tabler/icons-react";
 import InfoModal from "./infoModal";
@@ -13,6 +12,7 @@ import PalettePreviewRail from "./palettePreviewRail";
 import benchmarkImage from '../assets/benchmark.jpg';
 import { modals } from "@mantine/modals";
 import VisualizationCard from "./plots/VisualizationCard";
+import { Algorithm, AlgorithmDefinition, AlgorithmSettings } from "../logic/algorithm";
 
 export default function Home() {
     const theme = useMantineTheme();
@@ -86,7 +86,7 @@ export default function Home() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [file, loading, benchmarkMode])
 
-    const getColorPalette = async (settings: Partial<Settings>) => {
+    const getColorPalette = async (settings: AlgorithmSettings<Algorithm>, algorithmDefinition: AlgorithmDefinition<Algorithm>) => {
         setLoading(true);
         setProgress(0);
 
@@ -94,7 +94,7 @@ export default function Home() {
             return;
         }
 
-        const result = await trainKMeans(imageData, settings.colorCount, settings.maxIterations, settings.tolerance, settings.sampleSize, settings.benchmarkMode, (prg) => setProgress(prg * 100));
+        const result = await algorithmDefinition.train(imageData, (prg) => setProgress(prg * 100), settings);
 
         setPalette(result.palette);
         setClusters(result.clusters);
@@ -185,7 +185,7 @@ export default function Home() {
                             }
                         </Collapse>
                         <SettingsForm
-                            onSubmit={(data) => getColorPalette(data)}
+                            onSubmit={(data, algorithmDefinition) => getColorPalette(data, algorithmDefinition)}
                             loading={loading}
                             downscaleFactor={downscaleFactor}
                             onDownscaleFactorChange={(value) => setDownscaleFactor(value)}

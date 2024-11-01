@@ -23,18 +23,17 @@ export type AlgorithmSettings<T extends Algorithm> = T extends Algorithm.KMeans 
     kMeansPlusPlus: boolean;
 } : unknown;
 
-export type Setting<T extends Algorithm> = {
+export type Setting<T extends Algorithm = Algorithm> = {
     [K in keyof AlgorithmSettings<T>]: {
         settingName: K;
         settingType: 'number' | 'boolean' | 'string';
         startingValue: AlgorithmSettings<T>[K];
         primarySetting?: boolean;
         validate?: (value: AlgorithmSettings<T>[K]) => boolean;
+        componentProps?: AlgorithmSettings<T>[K] extends number ? NumberInputProps :
+                         AlgorithmSettings<T>[K] extends boolean ? SwitchProps :
+                         AlgorithmSettings<T>[K] extends string ? TextInputProps :
+                         object;
         Component?: React.ElementType;
-    } & (
-        AlgorithmSettings<T>[K] extends number ? NumberInputProps :
-        AlgorithmSettings<T>[K] extends boolean ? SwitchProps :
-        AlgorithmSettings<T>[K] extends string ? TextInputProps :
-        unknown
-    )
+    }
 }[keyof AlgorithmSettings<T>];

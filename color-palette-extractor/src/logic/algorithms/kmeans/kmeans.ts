@@ -1,6 +1,6 @@
-import { Algorithm, AlgorithmSettings } from "./algorithm";
-import { euclideanDistance, randomInt } from "./functions";
-import { Result, RGB, WorkerMessage } from "./types";
+import { Algorithm, AlgorithmSettings } from '../../algorithm';
+import { euclideanDistance, randomInt } from "../../functions";
+import { Result, RGB, WorkerMessage } from "../../types";
 
 const BENCHMARK_CENTROIDS: RGB[] = [
     [255, 255, 255],
@@ -112,7 +112,7 @@ export default class KMeans {
     }
 }
 
-export async function trainKMeans(data: RGB[], colorCount?: number, maxIterations?: number, tolerance?: number, sampleSize?: number, benchmarkMode?: boolean, onProgress?: (progress: number) => void): Promise<Result> {
+export async function trainKMeans(data: RGB[], onProgress: (progress: number) => void, settings: AlgorithmSettings<Algorithm.KMeans>): Promise<Result> {
     return new Promise((resolve, reject) => {
         const worker = new Worker(new URL('./worker.ts', import.meta.url), {
             type: 'module',
@@ -120,7 +120,7 @@ export async function trainKMeans(data: RGB[], colorCount?: number, maxIteration
         
         worker.postMessage({ 
             data, 
-            settings: { k: colorCount, maxIterations, tolerance, sampleSize, benchmarkMode }
+            settings,
         });
 
         worker.onmessage = (event: MessageEvent<WorkerMessage>) => {

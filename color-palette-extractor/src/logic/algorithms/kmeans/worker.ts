@@ -1,8 +1,8 @@
-import { Algorithm, AlgorithmSettings } from "./algorithm";
+import { Algorithm, AlgorithmSettings } from "../../algorithm";
 import KMeans from "./kmeans";
-import { Result, RGB } from "./types";
+import { Result, RGB } from "../../types";
 
-self.onmessage = async (event: MessageEvent<{settings: AlgorithmSettings<Algorithm.KMeans> } & { data: RGB[] }>) => {
+self.onmessage = async (event: MessageEvent<{settings: AlgorithmSettings<Algorithm> } & { data: RGB[] }>) => {
     const { data, settings } = event.data;
 
     const kmeans = new KMeans(settings);
