@@ -1,9 +1,12 @@
-import { Button, Collapse, Divider, Flex, Grid, Group, NumberInput, Stack, Switch, Text, useMantineTheme } from "@mantine/core";
+import { Button, Collapse, Divider, Flex, Grid, Group, NumberInput, Select, Stack, Switch, Text, useMantineTheme } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconWand, IconSettings, IconPuzzle } from "@tabler/icons-react";
 import { Settings } from "../logic/types";
 import { modals } from "@mantine/modals";
 import PluginsDialog from "./plugins/PluginsDialog";
+import { Algorithm, AlgorithmType } from "../logic/algorithm";
+import { algorithmDefinitions } from "../logic/algorithmDefinitions";
+import AutoInput from "./generic/AutoInput";
 
 const BENCHMARK_SETTINGS: Omit<Settings & { downscaleFactor: number }, 'benchmarkMode'> = {
     colorCount: 5,
@@ -26,26 +29,32 @@ type SettingsFormProps = {
 export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDownscaleFactorChange, benchmarkMode, onBenchmarkModeChange, disabled }: SettingsFormProps) {
     const theme = useMantineTheme();
 
+    const [algorithm, setAlgorithm] = useState<AlgorithmType>('k-means');
+    const [parameters, setParameters] = useState<Record<string, number | boolean | string>>({});
     const [settingsOpen, setSettingsOpen] = useState(false);
+
+    const algorithmDefinition = useMemo(() => algorithmDefinitions[algorithm], [algorithm]);
+
+    useEffect(() => {
+        resetParameters(algorithm);
+    }, [algorithmDefinition])
+
+    console.log(parameters)
+
     const [colorCount, setColorCount] = useState<number>(5);
     const [maxIterations, setMaxIterations] = useState<number>(100);
     const [sampleSize, setSampleSize] = useState<number>(1.00);
     const [tolerance, setTolerance] = useState<number>(0.001);
-    const [kmeansPlusPlus, setKmeansPlusPlus] = useState<boolean>(true);
 
     const [pluginsOpen, setPluginsOpen] = useState(false);
 
     const validate = useCallback(() => {
-        return [
-            colorCount > 0,
-            maxIterations > 0,
-            (sampleSize > 0 && sampleSize <= 100),
-            tolerance >= 0,
-            downscaleFactor > 0
-        ].every(Boolean);
-    }, [colorCount, maxIterations, sampleSize, tolerance, downscaleFactor]);
+        return algorithmDefinition.settings.every((setting) => setting.validate?.(parameters[setting.settingName]) ?? true);
+    }, [parameters]);
 
     const settingsValid = useMemo(() => validate(), [validate]);
+
+    console.log(settingsValid)
 
     const handleSubmit = () => {
         if (!validate()) {
@@ -63,11 +72,17 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
 
     const resetToDefault = () => {
         onBenchmarkModeChange(false);
-        setColorCount(5);
-        setMaxIterations(100);
-        setSampleSize(1.00);
-        setTolerance(0.001);
         onDownscaleFactorChange(10);
+
+        setAlgorithm('k-means');
+        resetParameters('k-means');
+    }
+
+    const resetParameters = (algorithm: AlgorithmType) => {
+        setParameters(algorithmDefinitions[algorithm].settings.reduce((acc, setting) => {
+            acc[setting.settingName] = setting.startingValue;
+            return acc;
+        }, {} as Record<string, number | boolean | string>))
     }
 
     useEffect(() => {
@@ -80,14 +95,26 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
         } else {
             resetToDefault();
         }
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [benchmarkMode])
 
     return (
         <Stack>
             <Group justify='space-between' mt={theme.spacing.md} gap={theme.spacing.sm}>
-                <NumberInput
+                {
+                    algorithmDefinition.settings.filter((setting) => setting.primarySetting).map((setting) => (
+                        <AutoInput 
+                            {...setting} 
+                            value={parameters[setting.settingName]} 
+                            onChange={(value) => setParameters({...parameters, [setting.settingName]: value})}
+                            disabled={benchmarkMode || disabled}
+                            error={!setting.validate?.(parameters[setting.settingName])}
+                            suffix={setting.settingName === 'k' ? ` color${parameters[setting.settingName] === 1 ? '' : 's'}` : undefined}
+                        />
+                    ))
+                }
+                {/* <NumberInput
                     size="xl"
                     placeholder="Number of colors"
                     value={colorCount}
@@ -102,7 +129,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     suffix={` color${colorCount === 1 ? '' : 's'}`}
                     clampBehavior="strict"
                     disabled={benchmarkMode || disabled}
-                />
+                /> */}
                 <Button
                     variant={settingsOpen ? 'filled' : 'light'}
                     size='xl'
@@ -110,7 +137,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     disabled={loading || disabled}
                     px={theme.spacing.md}
                 >
-                    <IconSettings/>
+                    <IconSettings />
                 </Button>
                 <Button
                     variant='light'
@@ -119,7 +146,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     disabled={loading || disabled}
                     px={theme.spacing.md}
                 >
-                    <IconPuzzle/>
+                    <IconPuzzle />
                 </Button>
                 <Button
                     size="xl"
@@ -141,57 +168,31 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                         Reset to default
                     </Button>
                 </Flex>
-                <Grid>
-                    <Grid.Col span={6}>
-                        <NumberInput
-                            label="Max iterations"
-                            size="sm"
-                            value={maxIterations}
-                            onChange={(value) => setMaxIterations(+value)}
-                            allowDecimal={false}
-                            allowLeadingZeros={false}
-                            allowNegative={false}
-                            decimalScale={0}
-                            clampBehavior="strict"
-                            min={1}
-                            max={10000}
-                            disabled={benchmarkMode || disabled}
-                        />
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                        <NumberInput
-                            label="Tolerance"
-                            size="sm"
-                            value={tolerance}
-                            onChange={(value) => setTolerance(+value)}
-                            allowDecimal={true}
-                            fixedDecimalScale
-                            allowNegative={false}
-                            decimalScale={3}
-                            clampBehavior="strict"
-                            min={0}
-                            max={100}
-                            step={0.001}
-                            disabled={benchmarkMode || disabled}
-                        />
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                        <NumberInput
-                            label="Sample size"
-                            size="sm"
-                            value={sampleSize}
-                            onChange={(value) => setSampleSize(+value)}
-                            allowDecimal={true}
-                            fixedDecimalScale
-                            allowNegative={false}
-                            decimalScale={2}
-                            clampBehavior="strict"
-                            min={0.01}
-                            max={1}
-                            step={0.01}
-                            disabled={benchmarkMode || disabled}
-                        />
-                    </Grid.Col>
+                <Select
+                    label='Algorithm'
+                    value={algorithm}
+                    onChange={(value) => setAlgorithm(value as AlgorithmType)}
+                    data={Object.values(Algorithm)}
+                    allowDeselect={false}
+                />
+                <Divider my={theme.spacing.md} />
+                <Grid align="center">
+                    {
+                        algorithmDefinition.settings.filter((setting) => !setting.primarySetting).map((setting) => (
+                            <Grid.Col span={6}>
+                                <AutoInput 
+                                    {...setting} 
+                                    value={parameters[setting.settingName]} 
+                                    onChange={(value) => setParameters({...parameters, [setting.settingName]: value})}
+                                    disabled={benchmarkMode || disabled}
+                                    error={setting.validate ? !setting.validate(parameters[setting.settingName]) : false}
+                                />
+                            </Grid.Col>
+                        ))
+                    }
+                </Grid>
+                <Divider my={theme.spacing.md} />
+                <Grid align="center">
                     <Grid.Col span={6}>
                         <NumberInput
                             label="Downscale factor"
@@ -210,18 +211,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     </Grid.Col>
                     <Grid.Col span={6}>
                         <Switch
-                            checked={kmeansPlusPlus}
-                            disabled={loading || disabled}
-                            label='k-means++'
-                            onChange={() => setKmeansPlusPlus(!kmeansPlusPlus)}
-                        />
-
-                    </Grid.Col>
-                </Grid>
-                <Divider my={theme.spacing.md}/>
-                <Grid>
-                    <Grid.Col span={6}>
-                        <Switch
+                            mt={theme.spacing.lg}
                             checked={benchmarkMode}
                             disabled={loading || disabled}
                             label='Benchmark mode'
@@ -239,7 +229,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                                         </Text>
                                     ),
                                     centered: true,
-                                    labels: { confirm: 'Confirm', cancel: 'Cancel' },                
+                                    labels: { confirm: 'Confirm', cancel: 'Cancel' },
                                     onConfirm: () => {
                                         onBenchmarkModeChange(true);
                                     },
@@ -250,7 +240,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     </Grid.Col>
                 </Grid>
             </Collapse>
-            <PluginsDialog open={pluginsOpen} onClose={() => setPluginsOpen(false)} showSearch/>
+            <PluginsDialog open={pluginsOpen} onClose={() => setPluginsOpen(false)} showSearch />
         </Stack>
     )
 }

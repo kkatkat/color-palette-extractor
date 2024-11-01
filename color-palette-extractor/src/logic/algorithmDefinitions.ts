@@ -1,22 +1,16 @@
-import { Algorithm, AlgorithmSettings, Setting } from "./algorithm";
-import { Result, RGB } from "./types";
+import { AlgorithmDefinition, Algorithm } from "./algorithm";
 
-export type AlgorithmDefinition<T extends Algorithm> = {
-    algName: string;
-    description: string;
-    settings: Setting<T>[];
-    train: (data: RGB[], onProgress: (prg: number) => void, settings: AlgorithmSettings<T>) => Promise<Result>;
-}
-
-export const algorithmDefinitions: Record<Algorithm, AlgorithmDefinition<Algorithm>> = {
+const algorithmDefinitions: Record<Algorithm, AlgorithmDefinition<Algorithm>> = {
     'k-means': {
         algName: 'K-means',
         description: 'A simple clustering algorithm that partitions data into k number of clusters.',
         train: () => new Promise(() => { }),
         settings: [{
             settingName: 'k',
+            settingType: 'number',
             primarySetting: true,
             startingValue: 5,
+            validate: (value: number) => +value > 0,
             //
             placeholder: 'Number of colors',
             min: 1,
@@ -30,8 +24,11 @@ export const algorithmDefinitions: Record<Algorithm, AlgorithmDefinition<Algorit
         },
         {
             settingName: 'maxIterations',
+            settingType: 'number',
             startingValue: 100,
+            validate: (value: number) => value > 0,
             //
+            label: 'Max iterations',
             allowDecimal: false,
             allowLeadingZeros: false,
             allowNegative: false,
@@ -42,8 +39,11 @@ export const algorithmDefinitions: Record<Algorithm, AlgorithmDefinition<Algorit
         },
         {
             settingName: 'tolerance',
+            settingType: 'number',
             startingValue: 0.001,
+            validate: (value: number) => value >= 0,
             //
+            label: 'Tolerance',
             allowDecimal: true,
             fixedDecimalScale: true,
             allowNegative: false,
@@ -54,7 +54,24 @@ export const algorithmDefinitions: Record<Algorithm, AlgorithmDefinition<Algorit
             step: 0.001,
         },
         {
+            settingName: 'sampleSize',
+            settingType: 'number',
+            startingValue: 1,
+            validate: (value: number) => value > 0 && value <= 1,
+            //
+            label: 'Sample size',
+            allowDecimal: true,
+            fixedDecimalScale: true,
+            allowNegative: false,
+            decimalScale: 2,
+            clampBehavior: 'strict',
+            min: 0.01,
+            max: 1,
+            step: 0.01,
+        },
+        {
             settingName: 'kMeansPlusPlus',
+            settingType: 'boolean',
             startingValue: true,
             //
             label: 'Use k-means++',
@@ -63,3 +80,5 @@ export const algorithmDefinitions: Record<Algorithm, AlgorithmDefinition<Algorit
     ]
     },
 }
+
+export { algorithmDefinitions };
