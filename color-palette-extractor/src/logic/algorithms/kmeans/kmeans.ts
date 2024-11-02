@@ -15,14 +15,16 @@ export default class KMeans {
     private k: number;
     private tolerance: number;
     private sampleSize: number;
+    private kMeansPlusPlus: boolean;
     private centroids: RGB[];
     private clusters: RGB[][];
     
-    constructor({k = 5, maxIterations = 100, tolerance = 0.001, sampleSize = 1, benchmarkMode = false}: AlgorithmSettings<Algorithm.KMeans>) {
+    constructor({k = 5, maxIterations = 100, tolerance = 0.001, sampleSize = 1, benchmarkMode = false, kMeansPlusPlus = true}: AlgorithmSettings<Algorithm.KMeans>) {
         this.k = k;
         this.maxIterations = maxIterations;
         this.tolerance = tolerance;
         this.sampleSize = sampleSize;
+        this.kMeansPlusPlus = kMeansPlusPlus;
         this.centroids = benchmarkMode ? BENCHMARK_CENTROIDS : [];
         this.clusters = [];
     }
@@ -32,8 +34,12 @@ export default class KMeans {
 
         // Initialize centroids if not provided (by benchmark mode = true)
         if (!this.centroids.length) {
-            for (let i = 0; i < this.k; i++) {
-                this.centroids[i] = data[randomInt(0, data.length - 1)];
+            if (this.kMeansPlusPlus) {
+                this.centroids = await this.getKMeansPlusPlusCentroids(data);
+            } else {
+                for (let i = 0; i < this.k; i++) {
+                    this.centroids[i] = data[randomInt(0, data.length - 1)];
+                }
             }
         }
 
@@ -109,6 +115,22 @@ export default class KMeans {
         console.log('Number of pixels after resampling:', sample.length);
 
         return sample;
+    }
+
+    private async getKMeansPlusPlusCentroids(data: RGB[]): Promise<RGB[]> {
+        const centroids = [data[randomInt(0, data.length - 1)]];
+
+        for (let i = 1; i < this.k; i++) {
+            const minDistances = data.map((pixel) => {
+                const distances = centroids.map((centroid) => euclideanDistance(centroid, pixel));
+                return Math.min(...distances);
+            })
+
+            const nextCentroid = data[minDistances.indexOf(minDistances.reduce((max, dist) => dist > max ? dist : max, -Infinity))];
+            centroids.push(nextCentroid);
+        }
+
+        return centroids;
     }
 }
 

@@ -6,6 +6,14 @@ const algorithmDefinitions: Record<Algorithm, AlgorithmDefinition<Algorithm>> = 
         algName: 'K-means',
         description: 'A simple clustering algorithm that partitions data into k number of clusters.',
         train: trainKMeans,
+        benchmarkSettings: {
+            k: 5,
+            maxIterations: 40,
+            sampleSize: 1.00,
+            tolerance: 0,
+            kMeansPlusPlus: false,
+            benchmarkMode: true,
+        },
         settings: [{
             settingName: 'k',
             settingType: 'number',

@@ -7,15 +7,6 @@ import { Algorithm, AlgorithmDefinition, AlgorithmSettings, AlgorithmType } from
 import { algorithmDefinitions } from "../logic/algorithmDefinitions";
 import AutoInput from "./generic/AutoInput";
 
-const BENCHMARK_SETTINGS: AlgorithmSettings<Algorithm.KMeans> = {
-    k: 5,
-    maxIterations: 40,
-    sampleSize: 1.00,
-    tolerance: 0,
-    kMeansPlusPlus: false,
-    benchmarkMode: true,
-}
-
 type SettingsFormProps = {
     onSubmit: (parameters: AlgorithmSettings<Algorithm>, algorithmDefinition: AlgorithmDefinition<Algorithm>) => void;
     downscaleFactor: number;
@@ -72,7 +63,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
     useEffect(() => {
         if (benchmarkMode) {
             setAlgorithm('k-means');
-            setParameters(BENCHMARK_SETTINGS);
+            setParameters(algorithmDefinition.benchmarkSettings);
 
             onDownscaleFactorChange(1);
         } else {
