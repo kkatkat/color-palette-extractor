@@ -29,7 +29,7 @@ export default class KMeans {
         this.clusters = [];
     }
 
-    async fit(data: RGB[], progressCallback?: (progress: number) => void): Promise<Result> {
+    async fit(data: RGB[], progressCallback?: (progress: number) => void): Promise<Result<Algorithm.KMeans>> {
         data = await this.resample(data);
 
         // Initialize centroids if not provided (by benchmark mode = true)
@@ -134,7 +134,7 @@ export default class KMeans {
     }
 }
 
-export async function trainKMeans(data: RGB[], onProgress: (progress: number) => void, settings: AlgorithmSettings<Algorithm.KMeans>): Promise<Result> {
+export async function trainKMeans(data: RGB[], onProgress: (progress: number) => void, settings: AlgorithmSettings<Algorithm.KMeans>): Promise<Result<Algorithm.KMeans>> {
     return new Promise((resolve, reject) => {
         const worker = new Worker(new URL('./worker.ts', import.meta.url), {
             type: 'module',

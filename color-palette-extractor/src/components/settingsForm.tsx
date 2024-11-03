@@ -1,4 +1,4 @@
-import { Button, Collapse, Divider, Flex, Grid, Group, NumberInput, Select, Stack, Switch, Text, useMantineTheme } from "@mantine/core";
+import { Button, Collapse, Divider, Flex, Grid, Group, NumberInput, Select, Stack, Switch, Text, Tooltip, useMantineTheme } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconWand, IconSettings, IconPuzzle } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
@@ -84,7 +84,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             onChange={(value) => setParameters({...parameters, [setting.settingName]: value})}
                             extraProps={{
                                 disabled: benchmarkMode || disabled,
-                                error: !setting.validate?.(parameters[setting.settingName]),
+                                error: setting?.validate ? !setting.validate?.(parameters[setting.settingName]) : false,
                                 suffix: setting.settingName === 'k' ? ` color${parameters[setting.settingName] === 1 ? '' : 's'}` : undefined,
                             }}
 
@@ -100,15 +100,17 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                 >
                     <IconSettings />
                 </Button>
-                <Button
-                    variant='light'
-                    size='xl'
-                    onClick={() => setPluginsOpen(true)}
-                    disabled={loading || disabled}
-                    px={theme.spacing.md}
-                >
-                    <IconPuzzle />
-                </Button>
+                <Tooltip label="Plugins: coming soon!">
+                    <Button
+                        variant='light'
+                        size='xl'
+                        onClick={() => setPluginsOpen(true)}
+                        disabled={true}
+                        px={theme.spacing.md}
+                    >
+                        <IconPuzzle />
+                    </Button>
+                </Tooltip>
                 <Button
                     size="xl"
                     variant="light"
@@ -160,6 +162,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                     <Grid.Col span={12}>
                         <NumberInput
                             label="Downscale factor"
+                            description="The width and height of the image will be divided by this number to speed up the processing. Lowering the factor will result in much longer processing times."
                             size="sm"
                             value={downscaleFactor}
                             onChange={(value) => onDownscaleFactorChange(+value)}
@@ -178,6 +181,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
                             checked={benchmarkMode}
                             disabled={loading || disabled}
                             label='Benchmark mode'
+                            description="Check your machine's performance"
                             onChange={() => {
                                 if (benchmarkMode) {
                                     onBenchmarkModeChange(false);

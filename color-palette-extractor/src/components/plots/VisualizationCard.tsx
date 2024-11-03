@@ -7,7 +7,7 @@ import PieChart from "./PieChart";
 
 type VisualizationContainerProps = PlotProps;
 
-export default function VisualizationCard({ centroids, clusters, colorNames, loading }: VisualizationContainerProps) {
+export default function VisualizationCard({ palette, clusters, colorNames, loading, algorithm }: VisualizationContainerProps) {
     const theme = useMantineTheme();
 
     const plots: { Component: React.ComponentType<PlotProps>; title: string; icon: JSX.Element }[] = [
@@ -38,7 +38,7 @@ export default function VisualizationCard({ centroids, clusters, colorNames, loa
                             <AccordionControl icon={icon} title={title} />
                             <Accordion.Panel>
                                 <Center w={'100%'}>
-                                    <Component centroids={centroids} clusters={clusters} colorNames={colorNames} loading={loading} />
+                                    <Component palette={palette} clusters={clusters} colorNames={colorNames} loading={loading} algorithm={algorithm} />
                                 </Center>
                             </Accordion.Panel>
                         </Accordion.Item>

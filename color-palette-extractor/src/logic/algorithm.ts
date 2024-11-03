@@ -12,7 +12,7 @@ export type AlgorithmDefinition<T extends Algorithm> = {
     description: string;
     benchmarkSettings: AlgorithmSettings<T> & { benchmarkMode: true };
     settings: Setting<T>[];
-    train: (data: RGB[], onProgress: (prg: number) => void, settings: AlgorithmSettings<T>) => Promise<Result>;
+    train: (data: RGB[], onProgress: (prg: number) => void, settings: AlgorithmSettings<T>) => Promise<Result<T>>;
 }
 
 export type CommonAlgorithmSettings = {

@@ -3,7 +3,7 @@ import { FileWithPath } from "@mantine/dropzone";
 import { useEffect, useMemo, useRef, useState } from "react";
 import DropzoneWrapper from "./dropzone";
 import { getClosestColorName, getPixels } from "../logic/functions";
-import { RGB } from "../logic/types";
+import { Result, RGB } from "../logic/types";
 import SettingsForm from "./settingsForm";
 import PaletteCard from "./paletteCard";
 import { IconBrandGithub, IconInfoCircle, IconX } from "@tabler/icons-react";
@@ -20,7 +20,7 @@ export default function Home() {
     const [file, setFile] = useState<FileWithPath | null>(null);
     const [imageData, setImageData] = useState<RGB[] | null>(null);
     const [palette, setPalette] = useState<RGB[]>();
-    const [clusters, setClusters] = useState<RGB[][]>();
+    const [result, setResult] = useState<Result<Algorithm>>();
     const [loading, setLoading] = useState(false);
     const [infoModalOpen, setInfoModalOpen] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -97,7 +97,7 @@ export default function Home() {
         const result = await algorithmDefinition.train(imageData, (prg) => setProgress(prg * 100), settings);
 
         setPalette(result.palette);
-        setClusters(result.clusters);
+        setResult(result);
         setLoading(false);
 
         if (result.benchmarkScore) {
@@ -202,8 +202,8 @@ export default function Home() {
                     palette &&
                     <>
                         {
-                            clusters && 
-                            <VisualizationCard centroids={palette} clusters={clusters} colorNames={colorNames} loading={loading}/>
+                            result?.clusters && 
+                            <VisualizationCard {...result} colorNames={colorNames} loading={loading}/>
                         }
                         <PaletteCard palette={palette} colorNames={colorNames} loading={loading} />
                     </>
