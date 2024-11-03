@@ -4,9 +4,9 @@ import Highcharts from "highcharts";
 import { useMemo } from "react";
 
 
-export default function PieChart({ centroids, colorNames, clusters }: PlotProps) {
+export default function PieChart({ palette, colorNames, clusters }: PlotProps) {
     const sortedData = useMemo(() => {
-        return centroids.map((centroid, index) => {
+        return palette.map((centroid, index) => {
             return {
                 name: colorNames.get(centroid),
                 y: clusters[index].length,
@@ -14,7 +14,7 @@ export default function PieChart({ centroids, colorNames, clusters }: PlotProps)
             }
         }
         ).sort((a, b) => b.y - a.y);
-    }, [clusters, centroids, colorNames]);
+    }, [clusters, palette, colorNames]);
 
     const chartOptions = useMemo<Highcharts.Options>(() => {
         return {

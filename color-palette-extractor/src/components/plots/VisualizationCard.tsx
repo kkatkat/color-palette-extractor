@@ -7,37 +7,43 @@ import PieChart from "./PieChart";
 
 type VisualizationContainerProps = PlotProps;
 
-export default function VisualizationCard({ centroids, clusters, colorNames, loading }: VisualizationContainerProps) {
+export default function VisualizationCard({ palette, clusters, colorNames, loading, algorithm }: VisualizationContainerProps) {
     const theme = useMantineTheme();
+
+    const plots: { Component: React.ComponentType<PlotProps>; title: string; icon: JSX.Element }[] = [
+        {
+            Component: ScatterPlot,
+            title: '3D Scatterplot',
+            icon: <IconChartScatter3d color={theme.colors.customColor[6]} />
+        },
+        {
+            Component: PixelsPerCluster,
+            title: 'Pixels per cluster',
+            icon: <IconChartBar color={theme.colors.customColor[6]} />
+        },
+        {
+            Component: PieChart,
+            title: 'Distribution',
+            icon: <IconChartPie color={theme.colors.customColor[6]} />
+        }
+    ];
 
     return (
         <Paper p={theme.spacing.md} shadow="xs" withBorder mb={theme.spacing.lg}>
             <Title order={5} mb={theme.spacing.md}>Visualizations</Title>
-            <Accordion multiple={false}>
-                <Accordion.Item key='3dScatterPlot' value="3dScatterPlot">
-                    <AccordionControl icon={<IconChartScatter3d color={theme.colors.customColor[6]} />} title="3D Scatterplot" />
-                    <Accordion.Panel>
-                        <Center w={'100%'}>
-                            <ScatterPlot centroids={centroids} clusters={clusters} colorNames={colorNames} loading={loading} />
-                        </Center>
-                    </Accordion.Panel>
-                </Accordion.Item>
-                <Accordion.Item key='ColorsPerCluster' value="ColorsPerCluster">
-                    <AccordionControl icon={<IconChartBar color={theme.colors.customColor[6]}/>} title="Pixels per cluster"/>
-                    <Accordion.Panel>
-                        <Center w={'100%'}>
-                            <PixelsPerCluster centroids={centroids} clusters={clusters} colorNames={colorNames} loading={loading}/>
-                        </Center>
-                    </Accordion.Panel>
-                </Accordion.Item>
-                <Accordion.Item key="Distribution" value="Distribution">
-                    <AccordionControl icon={<IconChartPie color={theme.colors.customColor[6]}/>} title="Distribution"/>
-                    <Accordion.Panel>
-                        <Center w={'100%'}>
-                            <PieChart centroids={centroids} clusters={clusters} colorNames={colorNames} loading={loading}/>
-                        </Center>
-                    </Accordion.Panel>
-                </Accordion.Item>
+            <Accordion multiple={true}>
+                {
+                    plots.map(({ Component, title, icon }) => (
+                        <Accordion.Item key={title} value={title}>
+                            <AccordionControl icon={icon} title={title} />
+                            <Accordion.Panel>
+                                <Center w={'100%'}>
+                                    <Component palette={palette} clusters={clusters} colorNames={colorNames} loading={loading} algorithm={algorithm} />
+                                </Center>
+                            </Accordion.Panel>
+                        </Accordion.Item>
+                    ))
+                }
             </Accordion>
         </Paper>
     )

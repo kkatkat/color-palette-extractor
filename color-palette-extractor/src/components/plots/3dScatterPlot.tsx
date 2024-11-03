@@ -11,7 +11,7 @@ Highcharts3d(Highcharts);
 
 const MAX_POINTS = 2000;
 
-export default function ScatterPlot({ centroids, clusters, loading }: PlotProps) {
+export default function ScatterPlot({ palette, clusters, loading }: PlotProps) {
     const chartRef = useRef(null);
 
     const [alpha, setAlpha] = useState(0);
@@ -98,7 +98,7 @@ export default function ScatterPlot({ centroids, clusters, loading }: PlotProps)
             series: [...reducedClusters.map((cluster, index): Highcharts.SeriesScatter3dOptions => {
                 return {
                     name: `Cluster ${index + 1}`,
-                    color: `rgba(${centroids[index]}, 1)`,
+                    color: `rgba(${palette[index]}, 1)`,
                     data: cluster.map((pixel) => {
                         return {
                             x: pixel[0],
@@ -116,7 +116,7 @@ export default function ScatterPlot({ centroids, clusters, loading }: PlotProps)
             {
                 name: 'Centroids',
                 color: 'black',
-                data: centroids.map((centroid) => {
+                data: palette.map((centroid) => {
                     return {
                         x: centroid[0],
                         y: centroid[1],
@@ -132,7 +132,7 @@ export default function ScatterPlot({ centroids, clusters, loading }: PlotProps)
                 zIndex: 1000,
             } as Highcharts.SeriesScatter3dOptions]
         }
-    }, [centroids, reducedClusters, alpha, beta, viewDistance]);
+    }, [palette, reducedClusters, alpha, beta, viewDistance]);
 
     const handleFieldReset = (field: 'alpha' | 'beta' | 'viewDistance') => {
         switch (field) {

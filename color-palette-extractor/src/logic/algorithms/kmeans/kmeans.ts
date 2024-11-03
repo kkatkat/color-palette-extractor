@@ -1,5 +1,6 @@
-import { euclideanDistance, randomInt } from "./functions";
-import { Result, RGB, WorkerMessage } from "./types";
+import { Algorithm, AlgorithmSettings } from '../../algorithm';
+import { euclideanDistance, randomInt } from "../../functions";
+import { Result, RGB, WorkerMessage } from "../../types";
 
 const BENCHMARK_CENTROIDS: RGB[] = [
     [255, 255, 255],
@@ -14,25 +15,31 @@ export default class KMeans {
     private k: number;
     private tolerance: number;
     private sampleSize: number;
+    private kMeansPlusPlus: boolean;
     private centroids: RGB[];
     private clusters: RGB[][];
     
-    constructor(k: number = 5, maxIterations: number = 100, tolerance: number = 0.001, sampleSize: number = 1, benchmarkMode: boolean = false) {
+    constructor({k = 5, maxIterations = 100, tolerance = 0.001, sampleSize = 1, benchmarkMode = false, kMeansPlusPlus = true}: AlgorithmSettings<Algorithm.KMeans>) {
         this.k = k;
         this.maxIterations = maxIterations;
         this.tolerance = tolerance;
         this.sampleSize = sampleSize;
+        this.kMeansPlusPlus = kMeansPlusPlus;
         this.centroids = benchmarkMode ? BENCHMARK_CENTROIDS : [];
         this.clusters = [];
     }
 
-    async fit(data: RGB[], progressCallback?: (progress: number) => void): Promise<Result> {
+    async fit(data: RGB[], progressCallback?: (progress: number) => void): Promise<Result<Algorithm.KMeans>> {
         data = await this.resample(data);
 
         // Initialize centroids if not provided (by benchmark mode = true)
         if (!this.centroids.length) {
-            for (let i = 0; i < this.k; i++) {
-                this.centroids[i] = data[randomInt(0, data.length - 1)];
+            if (this.kMeansPlusPlus) {
+                this.centroids = await this.getKMeansPlusPlusCentroids(data);
+            } else {
+                for (let i = 0; i < this.k; i++) {
+                    this.centroids[i] = data[randomInt(0, data.length - 1)];
+                }
             }
         }
 
@@ -83,11 +90,11 @@ export default class KMeans {
             }
 
             if (converged || i === this.maxIterations - 1) {
-                return { palette: this.centroids, clusters: this.clusters };
+                return { palette: this.centroids, clusters: this.clusters, algorithm: Algorithm.KMeans };
             }
         }
 
-        return { palette: this.centroids, clusters: this.clusters };
+        return { palette: this.centroids, clusters: this.clusters, algorithm: Algorithm.KMeans };
     };
 
     private async resample(data: RGB[]) {
@@ -109,14 +116,34 @@ export default class KMeans {
 
         return sample;
     }
+
+    private async getKMeansPlusPlusCentroids(data: RGB[]): Promise<RGB[]> {
+        const centroids = [data[randomInt(0, data.length - 1)]];
+
+        for (let i = 1; i < this.k; i++) {
+            const minDistances = data.map((pixel) => {
+                const distances = centroids.map((centroid) => euclideanDistance(centroid, pixel));
+                return Math.min(...distances);
+            })
+
+            const nextCentroid = data[minDistances.indexOf(minDistances.reduce((max, dist) => dist > max ? dist : max, -Infinity))];
+            centroids.push(nextCentroid);
+        }
+
+        return centroids;
+    }
 }
 
-export async function trainKMeans(data: RGB[], colorCount?: number, maxIterations?: number, tolerance?: number, sampleSize?: number, benchmarkMode?: boolean, onProgress?: (progress: number) => void): Promise<Result> {
+export async function trainKMeans(data: RGB[], onProgress: (progress: number) => void, settings: AlgorithmSettings<Algorithm.KMeans>): Promise<Result<Algorithm.KMeans>> {
     return new Promise((resolve, reject) => {
         const worker = new Worker(new URL('./worker.ts', import.meta.url), {
             type: 'module',
         });
-        worker.postMessage({ data, colorCount, maxIterations, tolerance, sampleSize, benchmarkMode });
+        
+        worker.postMessage({ 
+            data, 
+            settings,
+        });
 
         worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
             if (event.data.type === 'progress' && onProgress) {

@@ -3,6 +3,7 @@ import '@mantine/dropzone/styles.css';
 import { createTheme, MantineColorsTuple, MantineProvider } from '@mantine/core';
 import Home from './components/home';
 import { ModalsProvider } from '@mantine/modals';
+import './App.css';
 
 const customColor: MantineColorsTuple = [
     "#e6f9ff",
