@@ -1,55 +1,49 @@
 import { Accordion, Center, Paper, Text, Title, useMantineTheme } from "@mantine/core";
-import ScatterPlot from "./3dScatterPlot";
-import { IconChartBar, IconChartPie, IconChartScatter3d } from "@tabler/icons-react";
-import PixelsPerCluster from "./PixelsPerCluster";
 import { PlotProps } from "./types";
-import PieChart from "./PieChart";
+import { useMemo } from "react";
+import { algorithmDefinitions } from "../../logic/algorithmDefinitions";
+import { visualizations } from "../../logic/visualizations";
 
 type VisualizationContainerProps = PlotProps;
 
-export default function VisualizationCard({ palette, clusters, colorNames, loading, algorithm }: VisualizationContainerProps) {
+export default function VisualizationCard(props: VisualizationContainerProps) {
+    const { algorithm } = props;
     const theme = useMantineTheme();
 
-    const plots: { Component: React.ComponentType<PlotProps>; title: string; icon: JSX.Element }[] = [
-        {
-            Component: ScatterPlot,
-            title: '3D Scatterplot',
-            icon: <IconChartScatter3d color={theme.colors.customColor[6]} />
-        },
-        {
-            Component: PixelsPerCluster,
-            title: 'Pixels per cluster',
-            icon: <IconChartBar color={theme.colors.customColor[6]} />
-        },
-        {
-            Component: PieChart,
-            title: 'Distribution',
-            icon: <IconChartPie color={theme.colors.customColor[6]} />
-        }
-    ];
+    const algSchema = useMemo(() => {
+        return algorithmDefinitions[algorithm];
+    }, [algorithm])
+
+    if (!algSchema || !algSchema.visualizations || !algSchema.visualizations.length) {
+        return null;
+    }
+
+    const plots = algSchema.visualizations.map((vis) => {
+        const { Component, title, Icon } = visualizations[vis];
+
+        return (
+            <Accordion.Item key={title} value={title}>
+                <AccordionControl icon={<Icon color={theme.colors.customColor[6]} />} title={title} />
+                <Accordion.Panel>
+                    <Center w={'100%'}>
+                        <Component {...props} />
+                    </Center>
+                </Accordion.Panel>
+            </Accordion.Item>
+        )
+    })
 
     return (
         <Paper p={theme.spacing.md} shadow="xs" withBorder mb={theme.spacing.lg}>
             <Title order={5} mb={theme.spacing.md}>Visualizations</Title>
             <Accordion multiple={true}>
-                {
-                    plots.map(({ Component, title, icon }) => (
-                        <Accordion.Item key={title} value={title}>
-                            <AccordionControl icon={icon} title={title} />
-                            <Accordion.Panel>
-                                <Center w={'100%'}>
-                                    <Component palette={palette} clusters={clusters} colorNames={colorNames} loading={loading} algorithm={algorithm} />
-                                </Center>
-                            </Accordion.Panel>
-                        </Accordion.Item>
-                    ))
-                }
+                { plots }
             </Accordion>
         </Paper>
     )
 }
 
-function AccordionControl({ icon, title }: {icon?: React.ReactNode, title: string }) {
+function AccordionControl({ icon, title }: { icon?: React.ReactNode, title: string }) {
     return (
         <Accordion.Control icon={icon}>
             <Text>{title}</Text>

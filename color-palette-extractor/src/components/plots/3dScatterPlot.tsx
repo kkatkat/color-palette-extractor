@@ -6,12 +6,13 @@ import { ActionIcon, Center, Group, Loader, SimpleGrid, Slider, Stack, Text } fr
 import { IconRefresh } from "@tabler/icons-react";
 import { PlotProps } from "./types";
 import { RGB } from "../../logic/types";
+import { Algorithm } from "../../logic/algorithm";
 
 Highcharts3d(Highcharts);
 
 const MAX_POINTS = 2000;
 
-export default function ScatterPlot({ palette, clusters, loading }: PlotProps) {
+export default function ScatterPlot({ palette, clusters, loading }: PlotProps<Algorithm.KMeans>) {
     const chartRef = useRef(null);
 
     const [alpha, setAlpha] = useState(0);

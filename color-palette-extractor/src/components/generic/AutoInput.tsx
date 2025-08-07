@@ -1,7 +1,7 @@
 import { NumberInput, Switch, TextInput } from "@mantine/core";
 import { Algorithm, Setting } from "../../logic/algorithm";
 
-export default function AutoInput<T extends Algorithm>(props: Setting<T> & { value: any, onChange: (value: any) => void, extraProps?: object }) {
+export default function AutoInput<T extends Algorithm>(props: Setting<T> & { value: any, onChange: (value: any) => void, extraProps?: any }) {
     if (props.Component) {
         return <props.Component {...props.componentProps} {...props.extraProps} value={props.value} onChange={props.onChange} />;
     }

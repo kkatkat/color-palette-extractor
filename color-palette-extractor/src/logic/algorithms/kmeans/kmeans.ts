@@ -90,11 +90,11 @@ export default class KMeans {
             }
 
             if (converged || i === this.maxIterations - 1) {
-                return { palette: this.centroids, clusters: this.clusters, algorithm: Algorithm.KMeans };
+                return { palette: this.centroids, clusters: this.clusters, algorithm: Algorithm.KMeans } as Result<Algorithm.KMeans>;
             }
         }
 
-        return { palette: this.centroids, clusters: this.clusters, algorithm: Algorithm.KMeans };
+        return { palette: this.centroids, clusters: this.clusters, algorithm: Algorithm.KMeans } as Result<Algorithm.KMeans>;
     };
 
     private async resample(data: RGB[]) {
@@ -145,7 +145,7 @@ export async function trainKMeans(data: RGB[], onProgress: (progress: number) =>
             settings,
         });
 
-        worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
+        worker.onmessage = (event: MessageEvent<WorkerMessage<Algorithm.KMeans>>) => {
             if (event.data.type === 'progress' && onProgress) {
                 onProgress(event.data.payload);
             } else if (event.data.type === 'result') {

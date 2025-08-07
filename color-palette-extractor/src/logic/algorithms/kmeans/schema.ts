@@ -5,6 +5,7 @@ const schema: AlgorithmDefinition<Algorithm.KMeans> = {
     algName: 'K-means',
     description: 'A simple clustering algorithm that partitions data into k number of clusters.',
     train: trainKMeans,
+    visualizations: ['3dScatterPlot', 'PieChart', 'PixelsPerCluster'],
     benchmarkSettings: {
         k: 5,
         maxIterations: 40,

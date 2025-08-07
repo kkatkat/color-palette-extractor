@@ -185,7 +185,7 @@ export default function Home() {
                             }
                         </Collapse>
                         <SettingsForm
-                            onSubmit={(data, algorithmDefinition) => getColorPalette(data, algorithmDefinition)}
+                            onSubmit={(data, algorithmDefinition) => getColorPalette(data, algorithmDefinition as unknown as AlgorithmDefinition)}
                             loading={loading}
                             downscaleFactor={downscaleFactor}
                             onDownscaleFactorChange={(value) => setDownscaleFactor(value)}
@@ -199,12 +199,9 @@ export default function Home() {
                     </>
                 </Paper>
                 {
-                    palette &&
+                    palette && result &&
                     <>
-                        {
-                            result?.clusters && 
-                            <VisualizationCard {...result} colorNames={colorNames} loading={loading}/>
-                        }
+                        <VisualizationCard {...result} colorNames={colorNames} loading={loading}/>
                         <PaletteCard palette={palette} colorNames={colorNames} loading={loading} />
                     </>
                 }

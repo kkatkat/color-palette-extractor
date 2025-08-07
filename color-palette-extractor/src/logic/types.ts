@@ -3,17 +3,23 @@ import { Algorithm } from "./algorithm";
 
 export type RGB = [number, number, number];
 
-export type Result<T extends Algorithm> = {
+export type CommonResult = {
     algorithm: Algorithm;
-    benchmarkScore?: number;
-} & (T extends Algorithm.KMeans ? {
     palette: RGB[];
-    clusters: RGB[][];
-} : unknown);
+    benchmarkScore?: number;
+}
 
-export type WorkerMessage = 
+export type KMeansResult = CommonResult & {
+    clusters: RGB[][];
+}
+
+export type Result<T extends Algorithm = Algorithm> =
+    T extends Algorithm.KMeans ? KMeansResult :
+    never;
+
+export type WorkerMessage<T extends Algorithm> = 
     | { type: 'progress'; payload: number }
-    | { type: 'result'; payload: Result<Algorithm> };
+    | { type: 'result'; payload: Result<T> };
 
 export type AppPlugin = {
     name: string;

@@ -8,7 +8,7 @@ import { algorithmDefinitions } from "../logic/algorithmDefinitions";
 import AutoInput from "./generic/AutoInput";
 
 type SettingsFormProps = {
-    onSubmit: (parameters: AlgorithmSettings<Algorithm>, algorithmDefinition: AlgorithmDefinition<Algorithm>) => void;
+    onSubmit: (parameters: AlgorithmSettings, algorithmDefinition: AlgorithmDefinition) => void;
     downscaleFactor: number;
     onDownscaleFactorChange: (value: number) => void;
     benchmarkMode: boolean;
@@ -21,7 +21,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
     const theme = useMantineTheme();
 
     const [algorithm, setAlgorithm] = useState<AlgorithmType>('k-means');
-    const [parameters, setParameters] = useState<AlgorithmSettings<Algorithm>>({});
+    const [parameters, setParameters] = useState<AlgorithmSettings>({});
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [pluginsOpen, setPluginsOpen] = useState(false);
 
@@ -42,7 +42,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
             return;
         }
 
-        onSubmit(parameters, algorithmDefinition);
+        onSubmit(parameters, algorithmDefinition as AlgorithmDefinition);
     }
 
     const resetToDefault = () => {
@@ -57,7 +57,7 @@ export default function SettingsForm({ onSubmit, loading, downscaleFactor, onDow
         setParameters(algorithmDefinitions[algorithm].settings.reduce((acc, setting) => {
             acc[setting.settingName] = setting.startingValue;
             return acc;
-        }, {} as AlgorithmSettings<Algorithm>))
+        }, {}));
     }
 
     useEffect(() => {

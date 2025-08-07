@@ -3,8 +3,9 @@ import { PlotProps } from "./types";
 import HighchartsReact from "highcharts-react-official";
 import { useMemo } from "react";
 import { scrollToColor } from "../../logic/functions";
+import { Algorithm } from "../../logic/algorithm";
 
-export default function PixelsPerCluster({ palette, clusters, colorNames }: PlotProps) {
+export default function PixelsPerCluster({ palette, clusters, colorNames }: PlotProps<Algorithm.KMeans>) {
 
     const chartOptions = useMemo<Highcharts.Options>(() => {
         return {

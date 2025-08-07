@@ -1,7 +1,7 @@
 import { AlgorithmDefinition, Algorithm } from "./algorithm";
 import kmeans from "./algorithms/kmeans/schema";
 
-const algorithmDefinitions: Record<Algorithm, AlgorithmDefinition<Algorithm>> = {
+const algorithmDefinitions: { [K in Algorithm]: AlgorithmDefinition<K> } = {
     'k-means': kmeans,
 }
 

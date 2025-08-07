@@ -2,9 +2,10 @@ import HighchartsReact from "highcharts-react-official";
 import { PlotProps } from "./types";
 import Highcharts from "highcharts";
 import { useMemo } from "react";
+import { Algorithm } from "../../logic/algorithm";
 
 
-export default function PieChart({ palette, colorNames, clusters }: PlotProps) {
+export default function PieChart({ palette, colorNames, clusters }: PlotProps<Algorithm.KMeans>) {
     const sortedData = useMemo(() => {
         return palette.map((centroid, index) => {
             return {
